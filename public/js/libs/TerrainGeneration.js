@@ -42,7 +42,7 @@ function generateHeight( width, height ) {
 
         }
 
-        quality *= 5;
+        quality *= 3;
 
     }
 

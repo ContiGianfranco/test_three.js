@@ -4,12 +4,12 @@ import {Terrain} from "./js/Models/Terrain";
 import {Water} from "./js/Models/Water";
 
 let camera, controls, scene, renderer;
-const worldWidth = 256, worldDepth = 256;
+const worldWidth = 1024, worldDepth = 1024;
 const clock = new THREE.Clock();
 
 function init() {
 
-    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 100, 10000 );
+    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 10, 10000 );
     camera.position.set( 100, 800, - 800 );
     camera.lookAt( - 100, 810, - 800 );
 
@@ -31,7 +31,7 @@ function init() {
     scene.add( terrain.mesh );
 
     let water = new Water(worldWidth, worldDepth)
-    water.setPosition(0,250,0)
+    water.setPosition(0,150,0)
 
     scene.add( water.mesh );
 

@@ -1,22 +1,25 @@
 import * as THREE from "three";
 
 import {Object3d} from "./Object3d";
-import {generateWater} from "../libs/TerrainGeneration";
+import {DiamondSquareGenerator} from "../libs/diamondSquareAlgorithm";
 
 class Water extends Object3d{
     constructor(worldWidth, worldDepth) {
         super();
 
-        let data = generateWater(worldWidth, worldDepth);
+        let diamondSquareGenerator = new DiamondSquareGenerator(150, 1025);
+        let dataMatrix = diamondSquareGenerator.generateData();
 
         this.geometry = new THREE.PlaneGeometry( 7500, 7500, worldWidth - 1, worldDepth - 1 );
         this.geometry.rotateX( - Math.PI / 2 );
         let vertices = this.geometry.attributes.position.array;
 
-        for ( let i = 0, j = 0, l = vertices.length; i < l; i ++, j += 3 ) {
-
-            vertices[ j + 1 ] = data[ i ] * 10;
-
+        let vertexIndex = 0;
+        for(let i = 0; i < 1024; i++){
+            for(let j = 0; j < 1024; j++){
+                vertices[ vertexIndex + 1 ] = dataMatrix[i][j]
+                vertexIndex+=3
+            }
         }
 
         this.geometry.computeVertexNormals();
