@@ -26,7 +26,7 @@ class Terrain extends Object3d{
         this.geometry.computeVertexNormals();
 
         const loader = new THREE.TextureLoader();
-        const texture = loader.load( '/textures/RocksArid_seamless.jpg' );
+        const texture = loader.load( '/assets/img/RocksArid_seamless.jpg' );
 
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.wrapS = THREE.RepeatWrapping;
