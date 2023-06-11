@@ -1,15 +1,14 @@
 // Codigo de https://yonatankra.com/how-to-create-terrain-and-heightmaps-using-the-diamond-square-algorithm-in-javascript/
 // fecha: 28/5/23
 
-function randomInRange(min, max) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
-}
+import {RandomLCG} from "../RandomLCG/RandomLCG";
 
 class DiamondSquareGenerator {
     // matrix_length must be 2^N + 1
-    constructor(random_range, matrix_length) {
+    constructor(random_range, matrix_length, seed) {
         this.random_range = random_range;
         this.matrix_length = matrix_length;
+        this.random = new RandomLCG(seed);
         this.matrix = this.generateMatrix();
     }
 
@@ -22,10 +21,10 @@ class DiamondSquareGenerator {
             .fill(0)
             .map(() => new Array(this.matrix_length).fill(null));
 
-        matrix[0][this.matrix_length - 1] = randomInRange(0, this.random_range);
-        matrix[this.matrix_length - 1][0] = randomInRange(0, this.random_range);
-        matrix[0][0] = randomInRange(0, this.random_range);
-        matrix[this.matrix_length - 1][this.matrix_length - 1] = randomInRange(
+        matrix[0][this.matrix_length - 1] = this.random.generateInRange(0, this.random_range);
+        matrix[this.matrix_length - 1][0] = this.random.generateInRange(0, this.random_range);
+        matrix[0][0] = this.random.generateInRange(0, this.random_range);
+        matrix[this.matrix_length - 1][this.matrix_length - 1] = this.random.generateInRange(
             0,
             this.random_range
         );
@@ -77,7 +76,7 @@ class DiamondSquareGenerator {
                 );
                 const changed = {row: j + chunkSize / 2, column: i + chunkSize / 2};
                 matrix[changed.row][changed.column] =
-                    sum / count + randomInRange(-randomFactor, randomFactor);
+                    sum / count + this.random.generateInRange(-randomFactor, randomFactor);
             }
         }
         return matrix;
@@ -101,7 +100,7 @@ class DiamondSquareGenerator {
                     },
                     { sum: 0, count: 0 }
                 );
-                matrix[y][x] = sum / count + randomInRange(-randomFactor, randomFactor);
+                matrix[y][x] = sum / count + this.random.generateInRange(-randomFactor, randomFactor);
             }
         }
         return matrix;
