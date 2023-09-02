@@ -4,6 +4,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "geotiff": "^2.0.7",
     "three": "^0.152.2"
   },
   "devDependencies": {

@@ -15,13 +15,13 @@ class Water extends Object3d{
         this.geometry.rotateX( - Math.PI / 2 );
         let vertices = this.geometry.attributes.position.array;
 
-        let vertexIndex = 0;
+        /*let vertexIndex = 0;
         for(let i = 0; i < 1024; i++){
             for(let j = 0; j < 1024; j++){
                 vertices[ vertexIndex + 1 ] = dataMatrix[i][j]
                 vertexIndex+=3
             }
-        }
+        }*/
 
         this.geometry.computeVertexNormals();
 
