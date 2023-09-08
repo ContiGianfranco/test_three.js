@@ -76,5 +76,5 @@ function onWindowResize() {
 
 }
 
-await init();
-animate();
+init().then(animate);
+
