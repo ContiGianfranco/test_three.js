@@ -1,11 +1,9 @@
 import * as THREE from 'three';
 import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.js';
-import {Water} from "./js/Models/Water";
 import {getBlock} from "./js/libs/CDBQuery/CDBQuery";
 import {GeoCell} from "./js/Models/GeoCell";
 
 let camera, controls, scene, renderer;
-const worldWidth = 1024, worldDepth = 1024;
 const clock = new THREE.Clock();
 
 async function init() {
@@ -22,25 +20,15 @@ async function init() {
     document.body.appendChild(renderer.domElement);
 
     const light = new THREE.DirectionalLight(0xffffff, 0.7);
-    light.position.x = 100;
-    light.position.y = 800;
-    light.position.z = -800;
+    light.position.set(100,800, -800);
     scene.add(light);
 
-    let image = await getBlock()
-
+    const image = await getBlock()
     const rasters = await image.readRasters();
-
     const {width, [0]: raster} = rasters;
 
-    let terrain = new GeoCell(width, raster);
-
+    const terrain = new GeoCell(width, raster);
     scene.add(terrain.mesh);
-
-    /*let water = new Water(worldWidth, worldDepth)
-    water.setPosition(0, 45, 0)
-
-    scene.add(water.mesh);*/
 
     controls = new FirstPersonControls(camera, renderer.domElement);
     controls.movementSpeed = 500;
@@ -50,17 +38,13 @@ async function init() {
 }
 
 function animate() {
-
     requestAnimationFrame( animate );
-
     render();
 }
 
 function render() {
-
     controls.update( clock.getDelta() );
     renderer.render( scene, camera );
-
 }
 
 function onWindowResize() {
@@ -74,6 +58,5 @@ function onWindowResize() {
 
 }
 
-init();
-
+await init();
 animate();
