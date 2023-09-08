@@ -2,19 +2,32 @@ import * as THREE from "three";
 
 import {Object3d} from "./Object3d";
 
+function isBorder(vertexIndex, width){
+    return (vertexIndex < (width + 1) * 3) ||
+        ((vertexIndex % ((width+2) * 3)) === 0) ||
+        ((vertexIndex % ((width+2) * 3)) === (width+2)*3 - 3) ||
+        (vertexIndex > (width + 1) * (width + 2) * 3 - 3);
+}
 
 export default class GeoCell extends Object3d{
     constructor(width, raster) {
+        let vertexIndex = 0;
+        let point = 0;
+
         super();
 
-        this.geometry = new THREE.PlaneGeometry(2280, 2280, width - 1, width - 1);
+        this.geometry = new THREE.PlaneGeometry(2280, 2280, width + 1, width + 1);
         this.geometry.rotateX(-Math.PI / 2);
         let vertices = this.geometry.attributes.position.array;
 
-        let vertexIndex = 0;
-        for (let point in raster){
-            vertices[vertexIndex + 1] = raster[point]/50
-            vertexIndex += 3
+        while (vertexIndex < vertices.length) {
+            if (isBorder(vertexIndex, width)) {
+                vertices[vertexIndex + 1] = 0;
+            } else {
+                vertices[vertexIndex + 1] = raster[point]/50;
+                point++;
+            }
+            vertexIndex += 3;
         }
 
         this.geometry.computeVertexNormals();
