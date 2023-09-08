@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.js';
 import {getBlock} from "./js/libs/CDBQuery/CDBQuery";
 import GeoCell from "./js/Models/GeoCell";
+import {ELEVATION_LAYER} from "./js/constants/CdbLodBloackConstants";
 
 let camera, controls, scene, renderer;
 const clock = new THREE.Clock();
@@ -37,11 +38,19 @@ async function init() {
 }
 
 async function generateTerrain() {
-    const image = await getBlock()
+
+    const lodBlockInfo = {
+        lat: "N33",
+        lon: "E067",
+        layer: ELEVATION_LAYER,
+        lod: "L00",
+        uref: "U0",
+        rref: "R7"
+    }
+
+    const image = await getBlock(lodBlockInfo)
     const rasters = await image.readRasters();
     const {width, [0]: raster} = rasters;
-
-    console.log(rasters)
 
     return new GeoCell(width, raster);
 }

@@ -1,8 +1,10 @@
 import {fromUrl} from "geotiff";
 
-async function getBlock() {
+async function getBlock(lodBlockInfo) {
 
-    const tiff = await fromUrl("https://contigianfranco.github.io/webCDB/CDB/Titles/N333/E067/001_Elevation/L00/U0/N33E067_D001_S001_T001_L00_U4_R7.tif");
+    const url = `https://contigianfranco.github.io/webCDB/CDB/Titles/${lodBlockInfo.lat}/${lodBlockInfo.lon}/${lodBlockInfo.layer}/${lodBlockInfo.lod}/${lodBlockInfo.uref}/${lodBlockInfo.lat}${lodBlockInfo.lon}_D001_S001_T001_${lodBlockInfo.lod}_${lodBlockInfo.uref}_${lodBlockInfo.rref}.tif`
+
+    const tiff = await fromUrl(url);
     return await tiff.getImage();
 
 }
