@@ -3,17 +3,17 @@ import * as THREE from "three";
 import {Object3d} from "./Object3d";
 
 
-class GeoCell extends Object3d{
+export default class GeoCell extends Object3d{
     constructor(width, raster) {
         super();
 
-        this.geometry = new THREE.PlaneGeometry(7500, 7500, width - 1, width - 1);
+        this.geometry = new THREE.PlaneGeometry(2280, 2280, width - 1, width - 1);
         this.geometry.rotateX(-Math.PI / 2);
         let vertices = this.geometry.attributes.position.array;
 
         let vertexIndex = 0;
         for (let point in raster){
-            vertices[vertexIndex + 1] = raster[point]/20
+            vertices[vertexIndex + 1] = raster[point]/50
             vertexIndex += 3
         }
 
@@ -32,5 +32,3 @@ class GeoCell extends Object3d{
         this.mesh = new THREE.Mesh(this.geometry, this.material);
     }
 }
-
-export {GeoCell}
