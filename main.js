@@ -3,9 +3,12 @@ import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.j
 import {getBlock} from "./js/libs/CDBQuery/CDBQuery";
 import GeoCell from "./js/Models/GeoCell";
 import {ELEVATION_LAYER} from "./js/constants/CdbLodBloackConstants";
+import RenderArea from "./js/libs/RenderArea/RenderArea";
 
 let camera, controls, scene, renderer;
 const clock = new THREE.Clock();
+
+const renderArea = new RenderArea()
 
 async function init() {
 
@@ -31,8 +34,12 @@ async function init() {
     controls.verticalMin = 1.0;
     controls.verticalMax = 3.0;
 
-    const terrain = await generateTerrain()
-    scene.add(terrain.mesh);
+    const terrain_1 = await generateTerrain()
+    scene.add(terrain_1.mesh);
+
+    const terrain_2 = await generateTerrain()
+    terrain_2.setPosition(1000,0,0)
+    scene.add(terrain_2.mesh);
 
     window.addEventListener('resize', onWindowResize);
 }
@@ -62,6 +69,7 @@ function animate() {
 
 function render() {
     controls.update( clock.getDelta() );
+    renderArea.update(camera.position.x, camera.position.z)
     renderer.render( scene, camera );
 }
 

@@ -16,7 +16,7 @@ export default class GeoCell extends Object3d{
 
         super();
 
-        this.geometry = new THREE.PlaneGeometry(2280, 2280, width + 1, width + 1);
+        this.geometry = new THREE.PlaneGeometry(1000, 1000, width + 1, width + 1);
         this.geometry.rotateX(-Math.PI / 2);
         let vertices = this.geometry.attributes.position.array;
 
@@ -24,7 +24,7 @@ export default class GeoCell extends Object3d{
             if (isBorder(vertexIndex, width)) {
                 vertices[vertexIndex + 1] = 0;
             } else {
-                vertices[vertexIndex + 1] = raster[point]/50;
+                vertices[vertexIndex + 1] = raster[point]/100;
                 point++;
             }
             vertexIndex += 3;
