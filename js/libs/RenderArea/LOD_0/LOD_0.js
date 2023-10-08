@@ -1,9 +1,9 @@
 export default class LOD_0 {
-    constructor(id) {
-        this.north = 500;
-        this.south = -500;
-        this.west = -500;
-        this.east = 500;
+    constructor(id, n, s, w, e) {
+        this.north = n;
+        this.south = s;
+        this.west = w;
+        this.east = e;
 
         this.id = id;
     }

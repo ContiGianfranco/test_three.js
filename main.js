@@ -13,7 +13,7 @@ const renderArea = new RenderArea()
 async function init() {
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 10000);
-    camera.position.set(100, 800, -800);
+    camera.position.set(0, 200, -0);
     camera.lookAt(-100, 100, -400);
 
     scene = new THREE.Scene();
