@@ -10,13 +10,18 @@ function isBorder(vertexIndex, width){
 }
 
 export default class GeoCell extends Object3d{
-    constructor(width, raster) {
+    constructor(width, raster, lod) {
         let vertexIndex = 0;
         let point = 0;
 
         super();
 
-        this.geometry = new THREE.PlaneGeometry(1000, 1000, width + 1, width + 1);
+        let size_factor = 1;
+        if (lod > 0){
+            size_factor = Math.pow(2, lod);
+        }
+
+        this.geometry = new THREE.PlaneGeometry(1024/size_factor, 1024/size_factor, width + 1, width + 1);
         this.geometry.rotateX(-Math.PI / 2);
         let vertices = this.geometry.attributes.position.array;
 
@@ -33,12 +38,9 @@ export default class GeoCell extends Object3d{
         this.geometry.computeVertexNormals();
 
         const loader = new THREE.TextureLoader();
-        const texture = loader.load('./assets/img/RocksArid_seamless.jpg');
+        const texture = loader.load('./assets/img/S33W070_D004_S001_T001_LC02_U0_R0.png');
 
         texture.colorSpace = THREE.SRGBColorSpace;
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(8, 8);
 
         this.material = new THREE.MeshPhongMaterial({color: 0xb57272, map: texture, shininess: 0.8});
 
