@@ -5,7 +5,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@cornerstonejs/codec-openjpeg": "^1.2.2",
+    "axios": "^1.6.0",
+    "buffer": "^6.0.3",
     "geotiff": "^2.0.7",
+    "jpeg2000": "^1.1.1",
     "three": "^0.152.2"
   },
   "devDependencies": {
