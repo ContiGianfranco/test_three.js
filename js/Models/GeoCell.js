@@ -10,9 +10,13 @@ function isBorder(vertexIndex, width){
 }
 
 export default class GeoCell extends Object3d{
-    constructor(width, raster, lod, texture) {
+    constructor(geoCellInfo, lod) {
         let vertexIndex = 0;
         let point = 0;
+
+        const width = geoCellInfo['width'];
+        const raster = geoCellInfo['raster'];
+        const texture = geoCellInfo['texture']
 
         super();
 
@@ -37,13 +41,9 @@ export default class GeoCell extends Object3d{
 
         this.geometry.computeVertexNormals();
 
-        const loader = new THREE.TextureLoader();
+        texture.colorSpace = THREE.SRGBColorSpace;
 
-        const texture2 = loader.load('./assets/img/S33W070_D004_S001_T001_LC02_U0_R0.png');
-
-        texture2.colorSpace = THREE.SRGBColorSpace;
-
-        this.material = new THREE.MeshPhongMaterial({color: 0xb57272, map: texture2, shininess: 0.8});
+        this.material = new THREE.MeshPhongMaterial({color: 0xb57272, map: texture, shininess: 0.8});
 
         this.mesh = new THREE.Mesh(this.geometry, this.material);
     }
