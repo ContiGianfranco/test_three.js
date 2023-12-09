@@ -71,9 +71,11 @@ export default class BathCell extends Object3d{
         //this.waterMaterial.side = THREE.DoubleSide;
         //this.waterMaterial.wireframe = true;
         this.waterMesh = new THREE.Mesh(this.waterGeommetry, this.waterMaterial);
+        this.waterMesh.layers.set( 1 );
 
         this.material = new THREE.MeshPhongMaterial( { color: 0xb57272, shininess: 0.8 } );
         //this.material.side = THREE.DoubleSide;
         this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.mesh.layers.set( 0 );
     }
 }
