@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 import {Object3d} from "./Object3d";
+import scene from "three/addons/offscreen/scene";
 
 export default class BathCell extends Object3d{
     constructor(geoCellInfo, lod) {
@@ -66,14 +67,22 @@ export default class BathCell extends Object3d{
         texture.generateMipmaps = true;
         texture.colorSpace = THREE.SRGBColorSpace;
 
-        this.waterMaterial = new THREE.MeshPhongMaterial({color: 0xffffff, map: texture, shininess: 0.3});
+        this.waterMaterial = new THREE.MeshPhongMaterial({
+            color: 0xffffff,
+            map: texture,
+            shininess: 0.3,
+            clippingPlanes: window.appData.clippingPlanes,
+        });
+
+        console.log(window.appData.clippingPlanes)
+
         this.waterMaterial.transparent = true;
         //this.waterMaterial.side = THREE.DoubleSide;
         //this.waterMaterial.wireframe = true;
         this.waterMesh = new THREE.Mesh(this.waterGeommetry, this.waterMaterial);
         this.waterMesh.layers.set( 1 );
 
-        this.material = new THREE.MeshPhongMaterial( { color: 0xb57272, shininess: 0.8 } );
+        this.material = new THREE.MeshPhongMaterial( { color: 0xb57272, shininess: 0.8, clippingPlanes: window.appData.clippingPlanes, } );
         //this.material.side = THREE.DoubleSide;
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         this.mesh.layers.set( 0 );

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {Vector3} from 'three';
 import {getBlock, getElevation} from "./js/libs/CDBQuery/CDBQuery";
 import GeoCell from "./js/Models/GeoCell";
 import RenderArea from "./js/libs/RenderArea/RenderArea";
@@ -6,7 +7,6 @@ import BathCell from "./js/Models/BathCell";
 import GUI from "lil-gui";
 import {MapControls} from "three/addons/controls/MapControls";
 import Stats from "three/addons/libs/stats.module";
-import {Vector3} from "three";
 
 Math.radianes = function(grados) {
     return grados * Math.PI / 180;
@@ -14,14 +14,18 @@ Math.radianes = function(grados) {
 
 let camera, controls, scene, renderer, stats;
 let clipping_angle = 0;
+let planeHelpers, globalPlane;
 
 const clock = new THREE.Clock();
 
 const renderArea = new RenderArea()
 
-console.log("Hola")
 
 async function init() {
+
+    window.appData = {
+        clippingPlanes: [],
+    };
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 10000);
     camera.layers.enable( 0 ); // enabled by default
@@ -38,23 +42,27 @@ async function init() {
     stats = new Stats();
     document.body.appendChild( stats.dom );
 
-    const globalPlane = new THREE.Plane( new THREE.Vector3( Math.sin(Math.radianes(clipping_angle)), 0, Math.cos(Math.radianes(clipping_angle)) ), 0.0 );
-    const Empty = Object.freeze( [] );
-    const globalPlanes = [ globalPlane ];
-    renderer.clippingPlanes = Empty;
+    globalPlane = new THREE.Plane( new THREE.Vector3( Math.sin(Math.radianes(clipping_angle)), 0, Math.cos(Math.radianes(clipping_angle)) ), 0.0 );
+    window.appData.clippingPlanes = [globalPlane];
+
+    planeHelpers = new THREE.PlaneHelper( globalPlane, 1024, 0xff00ff );
+    planeHelpers.visible = false;
+    planeHelpers.depthWrite = false;
+    planeHelpers.renderOrder = 9;
+    scene.add( planeHelpers );
 
     const gui = new GUI();
-    const folderGlobal = gui.addFolder( 'Global Clipping' );
-    const propsGlobal = {
+    const folderClipping = gui.addFolder( 'Clipping' );
+    const propsClipping = {
 
             get 'Enabled'() {
 
-                return renderer.clippingPlanes !== Empty;
+                return renderer.localClippingEnabled;
 
             },
             set 'Enabled'( v ) {
 
-                renderer.clippingPlanes = v ? globalPlanes : Empty;
+                renderer.localClippingEnabled = v;
 
             },
 
@@ -71,13 +79,25 @@ async function init() {
             set 'Angle'( v ) {
                 clipping_angle = v
                 globalPlane.normal = new Vector3(Math.sin(Math.radianes(clipping_angle)), 0, Math.cos(Math.radianes(clipping_angle)));
-            }
+            },
+
+            get 'Display Helper'() {
+
+                return planeHelpers.visible;
+
+            },
+            set 'Display Helper'( v ) {
+
+                planeHelpers.visible = v;
+
+            },
 
         };
 
-    folderGlobal.add( propsGlobal, 'Enabled' );
-    folderGlobal.add( propsGlobal, 'Plane', - 1024/2, 1024/2 );
-    folderGlobal.add( propsGlobal, 'Angle', -180, 180 );
+    folderClipping.add( propsClipping, 'Enabled' );
+    folderClipping.add( propsClipping, 'Plane', - 1024/2, 1024/2 );
+    folderClipping.add( propsClipping, 'Angle', -180, 180 );
+    folderClipping.add( propsClipping, 'Display Helper' );
 
     const layers = {
         'toggle water': function () {
@@ -115,9 +135,9 @@ async function init() {
         rref: "R0"
     }
 
-    const terrain = await generateBathCell(lodBlock)
-    scene.add(terrain.mesh);
-    scene.add(terrain.waterMesh);
+    let terrain = await generateBathCell(lodBlock)
+    scene.add(terrain.mesh)
+    scene.add(terrain.waterMesh)
 
     window.addEventListener('resize', onWindowResize);
 }
@@ -138,6 +158,7 @@ async function generateTerrain(lodBlockInfo) {
 
 function animate() {
     requestAnimationFrame( animate );
+
     render();
 }
 
