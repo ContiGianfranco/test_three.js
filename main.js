@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import {Vector3} from 'three';
-import {getBlock, getElevation} from "./js/libs/CDBQuery/CDBQuery";
+import {getBlock} from "./js/libs/CDBQuery/CDBQuery";
 import GeoCell from "./js/Models/GeoCell";
 import RenderArea from "./js/libs/RenderArea/RenderArea";
 import BathCell from "./js/Models/BathCell";
 import GUI from "lil-gui";
 import {MapControls} from "three/addons/controls/MapControls";
 import Stats from "three/addons/libs/stats.module";
+import {getElevationRasters} from "./js/QueryWorker";
 
 Math.radianes = function(grados) {
     return grados * Math.PI / 180;
@@ -15,10 +16,8 @@ Math.radianes = function(grados) {
 let camera, controls, scene, renderer, stats;
 let clipping_angle = 0;
 let planeHelpers, globalPlane;
-
 const clock = new THREE.Clock();
-
-const renderArea = new RenderArea()
+const renderArea = new RenderArea();
 
 
 async function init() {
@@ -113,6 +112,9 @@ async function init() {
     light.position.set(100, 800, -800);
     scene.add(light);
 
+    const ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+    scene.add( ambientLight );
+
     // Set controls
     controls = new MapControls( camera, renderer.domElement );
 
@@ -136,15 +138,14 @@ async function init() {
     }
 
     let terrain = await generateBathCell(lodBlock)
-    scene.add(terrain.mesh)
-    scene.add(terrain.waterMesh)
+    scene.add(terrain.group);
 
     window.addEventListener('resize', onWindowResize);
 }
 
 async function generateBathCell(lodBlockInfo) {
 
-    const geoCellInfo = await getElevation(lodBlockInfo)
+    const geoCellInfo = await getElevationRasters(lodBlockInfo)
 
     return new BathCell(geoCellInfo, lodBlockInfo.lodNum);
 }

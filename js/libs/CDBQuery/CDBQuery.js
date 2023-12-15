@@ -66,38 +66,4 @@ async function getBlock(lodBlockInfo) {
 
 }
 
-async function getElevation(lodBlockInfo) {
-
-    let urlTiff, urlBath;
-
-    if (lodBlockInfo.lod.includes("LC")) {
-        urlTiff = `https://contigianfranco.github.io/webCDB/CDB/Titles/${lodBlockInfo.lat}/${lodBlockInfo.lon}/${ELEVATION_LAYER}/LC/${lodBlockInfo.uref}/${lodBlockInfo.lat}${lodBlockInfo.lon}_D001_S001_T001_${lodBlockInfo.lod}_${lodBlockInfo.uref}_${lodBlockInfo.rref}.tif`;
-        urlBath = `https://contigianfranco.github.io/webCDB/CDB/Titles/${lodBlockInfo.lat}/${lodBlockInfo.lon}/${ELEVATION_LAYER}/LC/${lodBlockInfo.uref}/${lodBlockInfo.lat}${lodBlockInfo.lon}_D001_S100_T001_${lodBlockInfo.lod}_${lodBlockInfo.uref}_${lodBlockInfo.rref}.tif`;
-    } else {
-        urlTiff = `https://contigianfranco.github.io/webCDB/CDB/Titles/${lodBlockInfo.lat}/${lodBlockInfo.lon}/${ELEVATION_LAYER}/${lodBlockInfo.lod}/${lodBlockInfo.uref}/${lodBlockInfo.lat}${lodBlockInfo.lon}_D001_S001_T001_${lodBlockInfo.lod}_${lodBlockInfo.uref}_${lodBlockInfo.rref}.tif`;
-        urlBath = `https://contigianfranco.github.io/webCDB/CDB/Titles/${lodBlockInfo.lat}/${lodBlockInfo.lon}/${ELEVATION_LAYER}/${lodBlockInfo.lod}/${lodBlockInfo.uref}/${lodBlockInfo.lat}${lodBlockInfo.lon}_D001_S100_T001_${lodBlockInfo.lod}_${lodBlockInfo.uref}_${lodBlockInfo.rref}.tif`;
-    }
-
-    console.log(urlTiff)
-
-    const tiff = await fromUrl(urlTiff);
-    const image = await tiff.getImage();
-    let rasters = await image.readRasters();
-    const {width, [0]: raster} = rasters;
-
-    const bath = await fromUrl(urlBath);
-    const bathImg = await bath.getImage();
-    rasters = await bathImg.readRasters();
-    const { [0]: rasterBath} = rasters;
-
-    console.log(width)
-
-    return {
-        'width': width,
-        'raster': raster,
-        'rasterBath': rasterBath,
-    };
-
-}
-
-export {getBlock, getElevation}
+export {getBlock}

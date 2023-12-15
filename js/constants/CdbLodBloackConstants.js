@@ -1,4 +1,8 @@
 const ELEVATION_LAYER = "001_Elevation";
 const IMAGE_LAYER = "004_Imagery";
+const ELEVATION_LAYER_DST = "D001_S001_T001";
+const BATHYMETRIC_LAYER_DST = "D001_S100_T001";
 
-export { ELEVATION_LAYER, IMAGE_LAYER };
+const TILES_URL = "https://contigianfranco.github.io/webCDB/CDB/Titles";
+
+export { ELEVATION_LAYER, IMAGE_LAYER, TILES_URL, ELEVATION_LAYER_DST, BATHYMETRIC_LAYER_DST};
