@@ -7,7 +7,7 @@ import BathCell from "./js/Models/BathCell";
 import GUI from "lil-gui";
 import {MapControls} from "three/addons/controls/MapControls";
 import Stats from "three/addons/libs/stats.module";
-import {getElevationRasters} from "./js/QueryWorker";
+import generateTile from "./js/Models/tile";
 
 Math.radianes = function(grados) {
     return grados * Math.PI / 180;
@@ -137,17 +137,13 @@ async function init() {
         rref: "R0"
     }
 
-    let terrain = await generateBathCell(lodBlock)
-    scene.add(terrain.group);
+    let terrain = new BathCell(lodBlock);
+
+    let test = generateTile()
+
+    scene.add(test);
 
     window.addEventListener('resize', onWindowResize);
-}
-
-async function generateBathCell(lodBlockInfo) {
-
-    const geoCellInfo = await getElevationRasters(lodBlockInfo)
-
-    return new BathCell(geoCellInfo, lodBlockInfo.lodNum);
 }
 
 async function generateTerrain(lodBlockInfo) {

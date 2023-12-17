@@ -49,4 +49,15 @@ async function getElevationRasters(lodBlockInfo) {
 
 }
 
+function geometryWorker() {
+    self.onmessage = function (e) {
+        const {lodBlockInfo} = e.data;
+        getElevationRasters(lodBlockInfo).then((geoCellInfo) => {
+            self.postMessage(geoCellInfo);
+        });
+    }
+}
+
+geometryWorker()
+
 export {getElevationRasters}

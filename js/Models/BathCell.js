@@ -13,14 +13,14 @@ function generateTexture(data, width) {
 }
 
 export default class BathCell extends Object3d{
-    constructor(geoCellInfo, lod) {
+    constructor(lodBlockInfo) {
         let vertexIndex = 0, point = 0;
-
-        const width = geoCellInfo['width'];
-        const raster = geoCellInfo['raster'];
-        const rasterBath = geoCellInfo['rasterBath'];
+        const lod = lodBlockInfo.lodNum;
+        const width = 1024;
 
         super();
+
+        const workerCallback = this.updateGeometry.bind(this);
 
         this.group = new THREE.Group();
 
@@ -30,43 +30,18 @@ export default class BathCell extends Object3d{
         }
 
         // Create the geometry
-        const terrainGeometry = new THREE.PlaneGeometry(1024/size_factor, 1024/size_factor, width - 1, width - 1);
+
+        const terrainGeometry = new THREE.PlaneGeometry(
+            1024/size_factor,
+            1024/size_factor,
+            width - 1,
+            width - 1);
         terrainGeometry.rotateX(-Math.PI / 2);
+
         const waterGeometry = terrainGeometry.clone();
 
-        let terrainVertices = terrainGeometry.attributes.position.array;
-        let waterVertices = waterGeometry.attributes.position.array;
-
-        const size = width*width
-        const data = new Uint8Array( 4 * size);
-
-        while (point < size) {
-            vertexIndex = point*3
-            const stride = point * 4;
-
-            data[ stride ] = 55;
-            data[ stride + 1 ] = 55;
-            data[ stride + 2 ] = 255;
-
-            if (rasterBath[point] > 0) {
-                terrainVertices[vertexIndex + 1] = (raster[point] - rasterBath[point])*2;
-                waterVertices[vertexIndex + 1] = raster[point]*2;
-                data[ stride + 3 ] = 255;
-            } else {
-                terrainVertices[vertexIndex + 1] = raster[point]*2;
-                waterVertices[vertexIndex + 1] = raster[point]*2;
-                data[ stride + 3 ] = 0;
-            }
-
-            point++;
-        }
-
-        terrainGeometry.computeVertexNormals();
-        waterGeometry.computeVertexNormals();
-
-        const texture = generateTexture(data, width);
-
-        let wireframe = false;
+        const texture = generateTexture(new Uint8Array( 4 * width*width), width);
+        let wireframe = true;
 
         const waterMaterial = new THREE.MeshPhongMaterial({
             color: 0xffffff,
@@ -96,5 +71,62 @@ export default class BathCell extends Object3d{
 
         this.group.add(terrainMesh);
         this.group.add(waterMesh);
+
+        this.webwoker = new Worker("./js/QueryWorker.js", {type: "module"});
+        this.webwoker.postMessage({'lodBlockInfo': lodBlockInfo});
+        this.webwoker.onmessage = workerCallback;
+    }
+
+    updateGeometry(event) {
+
+        console.log(event.data);
+
+
+        let vertexIndex = 0, point = 0;
+
+        const width = event.data['width'];
+        const raster = event.data['raster'];
+        const rasterBath = event.data['rasterBath'];
+
+        const terrainGeometry = this.group.children[0].geometry;
+        const waterGeometry = this.group.children[1].geometry;
+
+        let terrainVertices = terrainGeometry.attributes.position.array;
+        let waterVertices = waterGeometry.attributes.position.array;
+
+        const size = width*width
+        const data = new Uint8Array( 4 * size);
+
+        while (point < size) {
+            vertexIndex = point*3
+            const stride = point * 4;
+
+            data[ stride ] = 55;
+            data[ stride + 1 ] = 55;
+            data[ stride + 2 ] = 255;
+
+            if (rasterBath[point] > 0) {
+                terrainVertices[vertexIndex + 1] = (raster[point] - rasterBath[point])*2;
+                waterVertices[vertexIndex + 1] = raster[point]*2;
+                data[ stride + 3 ] = 255;
+            } else {
+                terrainVertices[vertexIndex + 1] = raster[point]*2;
+                waterVertices[vertexIndex + 1] = raster[point]*2;
+                data[ stride + 3 ] = 0;
+            }
+
+            point++;
+        }
+
+        this.group.children[1].material.map = generateTexture(data, width);
+        this.group.children[1].material.needsUpdate = true;
+
+        terrainGeometry.computeVertexNormals();
+        waterGeometry.computeVertexNormals();
+
+        terrainGeometry.attributes.position.needsUpdate = true;
+        waterGeometry.attributes.position.needsUpdate = true;
+
+        this.webwoker = undefined;
     }
 }
