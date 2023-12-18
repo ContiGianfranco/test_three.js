@@ -1,3 +1,6 @@
 export default {
-    base: '/test_three.js/'
+    base: '/test_three.js/',
+    worker: {
+        format: 'es',
+    },
 }

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 import {Object3d} from "./Object3d";
+import MyWorker from '../QueryWorker?worker';
 
 function generateTexture(data, width) {
     const texture = new THREE.DataTexture( data, width, width);
@@ -14,7 +15,6 @@ function generateTexture(data, width) {
 
 export default class BathCell extends Object3d{
     constructor(lodBlockInfo) {
-        let vertexIndex = 0, point = 0;
         const lod = lodBlockInfo.lodNum;
         const width = 1024;
 
@@ -41,12 +41,12 @@ export default class BathCell extends Object3d{
         const waterGeometry = terrainGeometry.clone();
 
         const texture = generateTexture(new Uint8Array( 4 * width*width), width);
-        let wireframe = true;
+        let wireframe = false;
 
         const waterMaterial = new THREE.MeshPhongMaterial({
-            color: 0xffffff,
-            map: texture,
+            color: 0xa0a0ff,
             shininess: 0.3,
+            map: texture,
             clippingPlanes: window.appData.clippingPlanes,
             transparent: true,
             side: THREE.DoubleSide,
@@ -72,7 +72,7 @@ export default class BathCell extends Object3d{
         this.group.add(terrainMesh);
         this.group.add(waterMesh);
 
-        this.webwoker = new Worker("./js/QueryWorker.js", {type: "module"});
+        this.webwoker = new MyWorker();
         this.webwoker.postMessage({'lodBlockInfo': lodBlockInfo});
         this.webwoker.onmessage = workerCallback;
     }

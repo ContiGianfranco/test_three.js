@@ -9,8 +9,8 @@ export default function generateTile() {
     const vertices = [];
     const normals = [];
 
-    const size = 100;
-    const segments = 10 + 2;
+    const size = 1024;
+    const segments = 1024 + 2;
 
     const halfSize = size / 2;
     const segmentSize = size / (segments - 2);
@@ -20,26 +20,43 @@ export default function generateTile() {
     // generate vertices, normals and color data for a simple grid geometry
 
     for ( let i = 0; i <= segments; i ++ ) {
-        let y = ( (i-1) * segmentSize ) - halfSize;
-        let z = 0;
+
+        let x,
+            y = ( (i-1) * segmentSize ) - halfSize,
+            z = 0,
+            xNorm = 0,
+            yNorm = 0,
+            zNorm = 1,
+            percentage = 0;
+
+        if ( skirt && ( i === 0 || i === segments ) ) {
+
+            z = -20;
+            percentage = i/segments;
+            y = percentage * size - halfSize;
+            yNorm = -2 * percentage + 1;
+            zNorm = 0;
+        }
 
         for ( let j = 0; j <= segments; j ++ ) {
-            let x = ( (j-1) * segmentSize ) - halfSize;
-            z = 0;
 
-            if ( skirt && ( i === 0 || i === segments ) ) {
-                z = -20;
-                y = i/segments * size - halfSize;
-            }
+            xNorm = 0;
+            x = ( (j-1) * segmentSize ) - halfSize;
 
             if ( skirt && ( j === 0 || j === segments ) ) {
-                z = -20;
-                x = j/segments * size - halfSize;
+
+                percentage = j/segments;
+                x = percentage * size - halfSize;
+                vertices.push( x, - y, -20 );
+                xNorm = 2 * percentage - 1;
+
+            } else {
+
+                vertices.push( x, - y, z );
+
             }
 
-            vertices.push( x, - y, z );
-
-            normals.push( 0, 0, 1 );
+            normals.push( xNorm, yNorm, 1 );
 
         }
 
@@ -75,12 +92,19 @@ export default function generateTile() {
     geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
     geometry.setAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
 
-    const material = new THREE.MeshNormalMaterial({
+    let material = new THREE.MeshNormalMaterial({
         side: THREE.DoubleSide,
-        wireframe: true,
     });
 
+    material = new THREE.MeshPhongMaterial( {
+        color: 0xb57272,
+        shininess: 0.8,
+        clippingPlanes: window.appData.clippingPlanes,
+        wireframe: false,
+    } );
+
     geometry.rotateX(-Math.PI / 2)
+
 
     return new THREE.Mesh(geometry, material);
 }
