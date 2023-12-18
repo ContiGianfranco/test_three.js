@@ -7,7 +7,6 @@ import BathCell from "./js/Models/BathCell";
 import GUI from "lil-gui";
 import {MapControls} from "three/addons/controls/MapControls";
 import Stats from "three/addons/libs/stats.module";
-import {ADDITION, Brush, Evaluator} from "three-bvh-csg";
 
 Math.radianes = function(grados) {
     return grados * Math.PI / 180;
@@ -18,8 +17,6 @@ let clipping_angle = 0;
 let planeHelpers, globalPlane;
 const clock = new THREE.Clock();
 const renderArea = new RenderArea();
-
-let evaluator, baseBrush, brush, result;
 
 async function init() {
 
