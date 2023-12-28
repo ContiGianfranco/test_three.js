@@ -106,12 +106,12 @@ export default class BathCell extends Object3d{
             data[ stride + 2 ] = 255;
 
             if (rasterBath[point] > 0) {
-                terrainVertices[vertexIndex + 1] = (raster[point] - rasterBath[point])*2;
-                waterVertices[vertexIndex + 1] = raster[point]*2;
+                terrainVertices[vertexIndex + 1] = (raster[point] - rasterBath[point]);
+                waterVertices[vertexIndex + 1] = raster[point];
                 data[ stride + 3 ] = 255 * 3/4;
             } else {
-                terrainVertices[vertexIndex + 1] = raster[point]*2;
-                waterVertices[vertexIndex + 1] = raster[point]*2;
+                terrainVertices[vertexIndex + 1] = raster[point];
+                waterVertices[vertexIndex + 1] = raster[point];
                 data[ stride + 3 ] = 0;
             }
 

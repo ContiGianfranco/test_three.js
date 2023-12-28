@@ -127,8 +127,8 @@ async function init() {
     controls.maxPolarAngle = Math.PI / 2;
 
     const lodBlock = {
-        lat: "N62",
-        lon: "W162",
+        lat: "S54",
+        lon: "W062",
         lod: "L00",
         lodNum: 0,
         uref: "U0",
