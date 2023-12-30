@@ -32,8 +32,8 @@ export default class BathCell extends Object3d{
         // Create the geometry
 
         const terrainGeometry = new THREE.PlaneGeometry(
-            1024/size_factor,
-            1024/size_factor,
+            111/size_factor,
+            111/size_factor,
             width - 1,
             width - 1);
         terrainGeometry.rotateX(-Math.PI / 2);
@@ -49,7 +49,7 @@ export default class BathCell extends Object3d{
             map: texture,
             clippingPlanes: window.appData.clippingPlanes,
             transparent: true,
-            side: THREE.DoubleSide,
+            //side: THREE.DoubleSide,
             wireframe: wireframe,
         });
 
@@ -59,15 +59,27 @@ export default class BathCell extends Object3d{
             color: 0xb57272,
             shininess: 0.8,
             clippingPlanes: window.appData.clippingPlanes,
-            side: THREE.DoubleSide,
+            //side: THREE.DoubleSide,
             wireframe: wireframe,
         } );
+
+        const baseMat = new THREE.MeshPhongMaterial({
+            color: 0xb57272,
+            stencilWrite: true,
+            stencilFunc: THREE.AlwaysStencilFunc,
+            side: THREE.FrontSide,
+            clippingPlanes: window.appData.clippingPlanes,
+            stencilFail: THREE.DecrementWrapStencilOp,
+            stencilZFail: THREE.DecrementWrapStencilOp,
+            stencilZPass: THREE.DecrementWrapStencilOp,
+        });
 
         const waterMesh = new THREE.Mesh(waterGeometry, waterMaterial);
         waterMesh.layers.set( 1 );
 
-        const terrainMesh = new THREE.Mesh(terrainGeometry, terrainMaterial);
+        const terrainMesh = new THREE.Mesh(terrainGeometry, baseMat);
         terrainMesh.layers.set( 0 );
+        terrainMesh.renderOrder = 1;
 
         this.group.add(terrainMesh);
         this.group.add(waterMesh);
@@ -97,6 +109,8 @@ export default class BathCell extends Object3d{
         const size = width*width
         const data = new Uint8Array( 4 * size);
 
+        const terrain_scaling = 0.01
+
         while (point < size) {
             vertexIndex = point*3
             const stride = point * 4;
@@ -106,12 +120,12 @@ export default class BathCell extends Object3d{
             data[ stride + 2 ] = 255;
 
             if (rasterBath[point] > 0) {
-                terrainVertices[vertexIndex + 1] = (raster[point] - rasterBath[point]);
-                waterVertices[vertexIndex + 1] = raster[point];
+                terrainVertices[vertexIndex + 1] = (raster[point] - rasterBath[point]) * terrain_scaling;
+                waterVertices[vertexIndex + 1] = raster[point] * terrain_scaling;
                 data[ stride + 3 ] = 255 * 3/4;
             } else {
-                terrainVertices[vertexIndex + 1] = raster[point];
-                waterVertices[vertexIndex + 1] = raster[point];
+                terrainVertices[vertexIndex + 1] = raster[point] * terrain_scaling;
+                waterVertices[vertexIndex + 1] = raster[point] * terrain_scaling;
                 data[ stride + 3 ] = 0;
             }
 

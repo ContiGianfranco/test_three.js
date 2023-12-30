@@ -14,7 +14,7 @@ Math.radianes = function(grados) {
 
 let camera, controls, scene, renderer, stats;
 let clipping_angle = 0;
-let planeHelpers, globalPlane;
+let planeHelpers, globalPlane, planeStencil;
 const clock = new THREE.Clock();
 const renderArea = new RenderArea();
 
@@ -42,12 +42,13 @@ async function init() {
     globalPlane = new THREE.Plane( new THREE.Vector3( Math.sin(Math.radianes(clipping_angle)), 0, Math.cos(Math.radianes(clipping_angle)) ), 0.0 );
     window.appData.clippingPlanes = [globalPlane];
 
-    planeHelpers = new THREE.PlaneHelper( globalPlane, 1024, 0xff00ff );
+    planeHelpers = new THREE.PlaneHelper( globalPlane, 111, 0xff00ff );
     planeHelpers.visible = false;
     planeHelpers.depthWrite = false;
     planeHelpers.renderOrder = 9;
     scene.add( planeHelpers );
 
+    // set gui
     const gui = new GUI();
     const folderClipping = gui.addFolder( 'Clipping' );
     const propsClipping = {
@@ -104,6 +105,7 @@ async function init() {
 
     gui.add( layers, 'toggle water' );
 
+    // set lighting
     const light = new THREE.DirectionalLight(0xffffff, 0.7);
     light.layers.enable( 0 );
     light.layers.enable( 1 );
@@ -121,11 +123,56 @@ async function init() {
 
     controls.screenSpacePanning = false;
 
-    controls.minDistance = 100;
+    controls.minDistance = -100;
     controls.maxDistance = 1000;
 
     controls.maxPolarAngle = Math.PI / 2;
 
+
+    const minHeigth = -20
+    const floorGeometry = new THREE.PlaneGeometry(111, 111, 1, 1);
+    floorGeometry.rotateX(-Math.PI / 2);
+    floorGeometry.translate(0, minHeigth, 0 )
+
+    const floorMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        wireframe: false,
+    });
+
+    const baseMat = new THREE.MeshBasicMaterial(
+        {
+            color: 0xffffff,
+            stencilWrite: true,
+            stencilFunc: THREE.AlwaysStencilFunc,
+            //colorWrite: false,
+            side: THREE.FrontSide,
+            stencilFail: THREE.IncrementWrapStencilOp,
+            stencilZFail: THREE.IncrementWrapStencilOp,
+            stencilZPass: THREE.IncrementWrapStencilOp,
+        });
+    const floor = new THREE.Mesh( floorGeometry, baseMat );
+    scene.add(floor)
+
+    const planeStencilGeom = new THREE.PlaneGeometry(111, 111, 1, 1);
+    const planeStencilMat = new THREE.MeshBasicMaterial( {
+        color: 0x8b5656,
+        metalness: 0.1,
+        roughness: 0.75,
+
+        stencilWrite: true,
+        stencilRef: 1,
+        stencilFunc: THREE.EqualStencilFunc,
+        stencilFail: THREE.ReplaceStencilOp,
+        stencilZFail: THREE.ReplaceStencilOp,
+        stencilZPass: THREE.ReplaceStencilOp,
+    } );
+    planeStencil = new THREE.Mesh( planeStencilGeom, planeStencilMat );
+    planeStencil.renderOrder = 2;
+    scene.add(planeStencil)
+
+
+
+    // set terrain
     const lodBlock = {
         lat: "S54",
         lon: "W062",
@@ -150,6 +197,13 @@ async function generateTerrain(lodBlockInfo) {
 
 function animate() {
     requestAnimationFrame( animate );
+
+    globalPlane.coplanarPoint( planeStencil.position );
+    planeStencil.lookAt(
+        planeStencil.position.x - globalPlane.normal.x,
+        planeStencil.position.y - globalPlane.normal.y,
+        planeStencil.position.z - globalPlane.normal.z,
+    );
 
     render();
 }
