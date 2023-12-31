@@ -32,7 +32,7 @@ async function init() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xe0e0ff);
 
-    renderer = new THREE.WebGLRenderer({antialias: true, logarithmicDepthBuffer: true});
+    renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
@@ -173,7 +173,7 @@ async function init() {
 
 
     // set terrain
-    const lodBlock = {
+    let lodBlock = {
         lat: "S54",
         lon: "W062",
         lod: "L00",
@@ -183,6 +183,20 @@ async function init() {
     }
 
     let terrain = new BathCell(lodBlock);
+    scene.add( terrain.group );
+
+    // set terrain
+    lodBlock = {
+        lat: "S54",
+        lon: "W060",
+        lod: "L00",
+        lodNum: 0,
+        uref: "U0",
+        rref: "R0"
+    }
+
+    terrain = new BathCell(lodBlock);
+    terrain.setPosition(111, 0, 0)
     scene.add( terrain.group );
 
     window.addEventListener('resize', onWindowResize);
