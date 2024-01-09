@@ -77,7 +77,7 @@ export default class BathCell extends Object3d{
         const waterMesh = new THREE.Mesh(waterGeometry, waterMaterial);
         waterMesh.layers.set( 1 );
 
-        const terrainMesh = new THREE.Mesh(terrainGeometry, baseMat);
+        const terrainMesh = new THREE.Mesh(terrainGeometry, terrainMaterial);
         terrainMesh.layers.set( 0 );
         terrainMesh.renderOrder = 1;
 
@@ -119,13 +119,13 @@ export default class BathCell extends Object3d{
             data[ stride + 1 ] = 55;
             data[ stride + 2 ] = 255;
 
+            waterVertices[vertexIndex + 1] = raster[point] * terrain_scaling;
+
             if (rasterBath[point] > 0) {
                 terrainVertices[vertexIndex + 1] = (raster[point] - rasterBath[point]) * terrain_scaling;
-                waterVertices[vertexIndex + 1] = raster[point] * terrain_scaling;
                 data[ stride + 3 ] = 255 * 3/4;
             } else {
                 terrainVertices[vertexIndex + 1] = raster[point] * terrain_scaling;
-                waterVertices[vertexIndex + 1] = raster[point] * terrain_scaling;
                 data[ stride + 3 ] = 0;
             }
 

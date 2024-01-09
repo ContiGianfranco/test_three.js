@@ -151,7 +151,7 @@ async function init() {
             stencilZPass: THREE.IncrementWrapStencilOp,
         });
     const floor = new THREE.Mesh( floorGeometry, baseMat );
-    scene.add(floor)
+    //scene.add(floor)
 
     const planeStencilGeom = new THREE.PlaneGeometry(111, 111, 1, 1);
     const planeStencilMat = new THREE.MeshBasicMaterial( {
@@ -168,7 +168,7 @@ async function init() {
     } );
     planeStencil = new THREE.Mesh( planeStencilGeom, planeStencilMat );
     planeStencil.renderOrder = 2;
-    scene.add(planeStencil)
+    //scene.add(planeStencil)
 
 
 
