@@ -128,34 +128,9 @@ async function init() {
 
     controls.maxPolarAngle = Math.PI / 2;
 
-
-    const minHeigth = -20
-    const floorGeometry = new THREE.PlaneGeometry(111, 111, 1, 1);
-    floorGeometry.rotateX(-Math.PI / 2);
-    floorGeometry.translate(0, minHeigth, 0 )
-
-    const floorMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        wireframe: false,
-    });
-
-    const baseMat = new THREE.MeshBasicMaterial(
-        {
-            color: 0xffffff,
-            stencilWrite: true,
-            stencilFunc: THREE.AlwaysStencilFunc,
-            //colorWrite: false,
-            side: THREE.FrontSide,
-            stencilFail: THREE.IncrementWrapStencilOp,
-            stencilZFail: THREE.IncrementWrapStencilOp,
-            stencilZPass: THREE.IncrementWrapStencilOp,
-        });
-    const floor = new THREE.Mesh( floorGeometry, baseMat );
-    //scene.add(floor)
-
     const planeStencilGeom = new THREE.PlaneGeometry(111, 111, 1, 1);
     const planeStencilMat = new THREE.MeshBasicMaterial( {
-        color: 0x8b5656,
+        color: 0xb57272,
         metalness: 0.1,
         roughness: 0.75,
 
@@ -168,9 +143,7 @@ async function init() {
     } );
     planeStencil = new THREE.Mesh( planeStencilGeom, planeStencilMat );
     planeStencil.renderOrder = 2;
-    //scene.add(planeStencil)
-
-
+    scene.add(planeStencil)
 
     // set terrain
     let lodBlock = {

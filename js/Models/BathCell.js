@@ -3,6 +3,8 @@ import * as THREE from "three";
 import {Object3d} from "./Object3d";
 import MyWorker from '../QueryWorker?worker';
 
+const minHeight = -50
+
 function generateTexture(data, width) {
     const texture = new THREE.DataTexture( data, width, width);
     texture.needsUpdate = true;
@@ -30,7 +32,6 @@ export default class BathCell extends Object3d{
         }
 
         // Create the geometry
-
         const terrainGeometry = new THREE.PlaneGeometry(
             111/size_factor,
             111/size_factor,
@@ -39,6 +40,45 @@ export default class BathCell extends Object3d{
         terrainGeometry.rotateX(-Math.PI / 2);
 
         const waterGeometry = terrainGeometry.clone();
+
+        const floorGeometry = new THREE.PlaneGeometry(
+            111/size_factor,
+            111/size_factor,
+            1,
+            1);
+
+        floorGeometry.rotateX(-Math.PI / 2);
+        floorGeometry.translate(0, minHeight, 0 )
+
+        const northPlaneGeometry = new THREE.PlaneGeometry(
+            111/size_factor,
+            0,
+            width - 1,
+            1);
+        const southPlaneGeometry = northPlaneGeometry.clone();
+        const westPlaneGeometry = northPlaneGeometry.clone();
+        const eastPlaneGeometry = northPlaneGeometry.clone();
+
+        northPlaneGeometry.translate(0 , minHeight, -(111/size_factor) / 2 );
+        southPlaneGeometry.rotateY(Math.PI);
+        southPlaneGeometry.translate(0 , minHeight, (111/size_factor) / 2 );
+        westPlaneGeometry.rotateY(Math.PI/2);
+        westPlaneGeometry.translate(-(111/size_factor) / 2 , minHeight, 0);
+        eastPlaneGeometry.rotateY(-Math.PI/2);
+        eastPlaneGeometry.translate((111/size_factor) / 2 , minHeight, 0);
+
+        const floorMaterial = new THREE.MeshBasicMaterial(
+            {
+                color: 0xffffff,
+                stencilWrite: true,
+                stencilFunc: THREE.AlwaysStencilFunc,
+                colorWrite: false,
+                clippingPlanes: window.appData.clippingPlanes,
+                side: THREE.FrontSide,
+                stencilFail: THREE.IncrementWrapStencilOp,
+                stencilZFail: THREE.IncrementWrapStencilOp,
+                stencilZPass: THREE.IncrementWrapStencilOp,
+            });
 
         const texture = generateTexture(new Uint8Array( 4 * width*width), width);
         let wireframe = false;
@@ -49,7 +89,6 @@ export default class BathCell extends Object3d{
             map: texture,
             clippingPlanes: window.appData.clippingPlanes,
             transparent: true,
-            //side: THREE.DoubleSide,
             wireframe: wireframe,
         });
 
@@ -57,10 +96,13 @@ export default class BathCell extends Object3d{
 
         const terrainMaterial = new THREE.MeshPhongMaterial( {
             color: 0xb57272,
-            shininess: 0.8,
+            side: THREE.BackSide,
+            stencilWrite: true,
+            stencilFunc: THREE.AlwaysStencilFunc,
             clippingPlanes: window.appData.clippingPlanes,
-            //side: THREE.DoubleSide,
-            wireframe: wireframe,
+            stencilFail: THREE.DecrementWrapStencilOp,
+            stencilZFail: THREE.DecrementWrapStencilOp,
+            stencilZPass: THREE.DecrementWrapStencilOp,
         } );
 
         const baseMat = new THREE.MeshPhongMaterial({
@@ -74,15 +116,53 @@ export default class BathCell extends Object3d{
             stencilZPass: THREE.DecrementWrapStencilOp,
         });
 
+        const backMaterial = new THREE.MeshBasicMaterial(
+            {
+                color: 0xffffff,
+                stencilWrite: true,
+                stencilFunc: THREE.AlwaysStencilFunc,
+                colorWrite: false,
+                clippingPlanes: window.appData.clippingPlanes,
+                side: THREE.BackSide,
+                stencilFail: THREE.IncrementWrapStencilOp,
+                stencilZFail: THREE.IncrementWrapStencilOp,
+                stencilZPass: THREE.IncrementWrapStencilOp,
+            });
+
         const waterMesh = new THREE.Mesh(waterGeometry, waterMaterial);
         waterMesh.layers.set( 1 );
 
-        const terrainMesh = new THREE.Mesh(terrainGeometry, terrainMaterial);
+        const terrainMesh = new THREE.Mesh(terrainGeometry, baseMat);
+        const terrainBackMesh = new THREE.Mesh(terrainGeometry,backMaterial);
         terrainMesh.layers.set( 0 );
         terrainMesh.renderOrder = 1;
 
+        const northPlaneIn = new THREE.Mesh( northPlaneGeometry, floorMaterial );
+        const northPlaneOut = new THREE.Mesh( northPlaneGeometry, terrainMaterial );
+
+        const southPlaneIn = new THREE.Mesh( southPlaneGeometry, floorMaterial );
+        const southPlaneOut = new THREE.Mesh( southPlaneGeometry, terrainMaterial );
+
+        const westPlaneIn = new THREE.Mesh( westPlaneGeometry, floorMaterial );
+        const westPlaneOut = new THREE.Mesh( westPlaneGeometry, terrainMaterial );
+
+        const eastPlaneIn = new THREE.Mesh( eastPlaneGeometry, floorMaterial );
+        const eastPlaneOut = new THREE.Mesh( eastPlaneGeometry, terrainMaterial );
+
+        const floor = new THREE.Mesh( floorGeometry, floorMaterial );
+
         this.group.add(terrainMesh);
         this.group.add(waterMesh);
+        this.group.add(northPlaneIn);
+        this.group.add(northPlaneOut);
+        this.group.add(southPlaneIn);
+        this.group.add(southPlaneOut);
+        this.group.add(westPlaneIn);
+        this.group.add(westPlaneOut);
+        this.group.add(eastPlaneIn);
+        this.group.add(eastPlaneOut);
+        this.group.add(floor);
+        this.group.add(terrainBackMesh);
 
         this.webwoker = new MyWorker();
         this.webwoker.postMessage({'lodBlockInfo': lodBlockInfo});
@@ -90,9 +170,6 @@ export default class BathCell extends Object3d{
     }
 
     updateGeometry(event) {
-
-        console.log(event.data);
-
 
         let vertexIndex = 0, point = 0;
 
@@ -132,6 +209,78 @@ export default class BathCell extends Object3d{
             point++;
         }
 
+        const northGeometry = this.group.children[2].geometry;
+        let northVertices = northGeometry.attributes.position.array;
+
+        vertexIndex = 0;
+        point = 0;
+
+        while (point < width) {
+            vertexIndex = point*3
+
+            if (rasterBath[point] > 0) {
+                northVertices[vertexIndex + 1] = (raster[point] - rasterBath[point]) * terrain_scaling;
+            } else {
+                northVertices[vertexIndex + 1] = raster[point] * terrain_scaling;
+            }
+
+            point++;
+        }
+
+        const southGeometry = this.group.children[4].geometry;
+        let southVertices = southGeometry.attributes.position.array;
+
+        point = size-1;
+        vertexIndex = 0;
+
+        while (point >= size-width) {
+
+            if (rasterBath[point] > 0) {
+                southVertices[vertexIndex + 1] = (raster[point] - rasterBath[point]) * terrain_scaling;
+            } else {
+                southVertices[vertexIndex + 1] = raster[point] * terrain_scaling;
+            }
+
+            vertexIndex += 3
+            point--;
+        }
+
+        const westGeometry = this.group.children[6].geometry;
+        let westVertices = westGeometry.attributes.position.array;
+
+        point = size-1024;
+        vertexIndex = 0;
+
+        while (point >= 0) {
+
+            if (rasterBath[point] > 0) {
+                westVertices[vertexIndex + 1] = (raster[point] - rasterBath[point]) * terrain_scaling;
+            } else {
+                westVertices[vertexIndex + 1] = raster[point] * terrain_scaling;
+            }
+
+            vertexIndex += 3
+            point-=1024;
+        }
+
+        const eastGeometry = this.group.children[8].geometry;
+        let eastVertices = eastGeometry.attributes.position.array;
+
+        vertexIndex = 0;
+        point = 1023;
+
+        while (point < size) {
+
+            if (rasterBath[point] > 0) {
+                eastVertices[vertexIndex + 1] = (raster[point] - rasterBath[point]) * terrain_scaling;
+            } else {
+                eastVertices[vertexIndex + 1] = raster[point] * terrain_scaling;
+            }
+
+            vertexIndex += 3
+            point+=1024;
+        }
+
         this.group.children[1].material.map = generateTexture(data, width);
         this.group.children[1].material.needsUpdate = true;
 
@@ -140,6 +289,11 @@ export default class BathCell extends Object3d{
 
         terrainGeometry.attributes.position.needsUpdate = true;
         waterGeometry.attributes.position.needsUpdate = true;
+
+        northGeometry.attributes.position.needsUpdate = true;
+        southGeometry.attributes.position.needsUpdate = true;
+        westGeometry.attributes.position.needsUpdate = true;
+        eastGeometry.attributes.position.needsUpdate = true;
 
         this.webwoker = undefined;
     }
