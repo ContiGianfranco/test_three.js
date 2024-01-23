@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 import {Object3d} from "./Object3d";
 import MyWorker from '../QueryWorker?worker';
+import {ratioLongitude} from "../libs/LatitudRatio";
 
 const minHeight = -50
 
@@ -31,9 +32,25 @@ export default class BathCell extends Object3d{
             size_factor = Math.pow(2, lod);
         }
 
+        let ratio = 1;
+        try {
+            let lat = lodBlockInfo.lat.substring(1)
+
+            if (lodBlockInfo.lat[0] === 'S') {
+                lat = -lat;
+            }
+
+            ratio = ratioLongitude(lat);
+            console.log(ratio)
+            console.log(lat)
+
+        } catch (error) {
+            console.error(error);
+        }
+
         // Create the geometry
         const terrainGeometry = new THREE.PlaneGeometry(
-            111/size_factor,
+            111/size_factor * ratio,
             111/size_factor,
             width - 1,
             width - 1);
@@ -42,7 +59,7 @@ export default class BathCell extends Object3d{
         const waterGeometry = terrainGeometry.clone();
 
         const floorGeometry = new THREE.PlaneGeometry(
-            111/size_factor,
+            111/size_factor * ratio,
             111/size_factor,
             1,
             1);
@@ -59,13 +76,16 @@ export default class BathCell extends Object3d{
         const westPlaneGeometry = northPlaneGeometry.clone();
         const eastPlaneGeometry = northPlaneGeometry.clone();
 
+        northPlaneGeometry.scale(ratio, 1, 1)
+        southPlaneGeometry.scale(ratio, 1, 1)
+
         northPlaneGeometry.translate(0 , minHeight, -(111/size_factor) / 2 );
         southPlaneGeometry.rotateY(Math.PI);
         southPlaneGeometry.translate(0 , minHeight, (111/size_factor) / 2 );
         westPlaneGeometry.rotateY(Math.PI/2);
-        westPlaneGeometry.translate(-(111/size_factor) / 2 , minHeight, 0);
+        westPlaneGeometry.translate(-(111/size_factor * ratio) / 2 , minHeight, 0);
         eastPlaneGeometry.rotateY(-Math.PI/2);
-        eastPlaneGeometry.translate((111/size_factor) / 2 , minHeight, 0);
+        eastPlaneGeometry.translate((111/size_factor * ratio) / 2 , minHeight, 0);
 
         const floorMaterial = new THREE.MeshBasicMaterial(
             {
@@ -167,6 +187,13 @@ export default class BathCell extends Object3d{
         this.webwoker = new MyWorker();
         this.webwoker.postMessage({'lodBlockInfo': lodBlockInfo});
         this.webwoker.onmessage = workerCallback;
+
+        let lat = 111 * (54 + -lodBlockInfo.lat.substring(1) + ratio/2)
+        let lon = 111 * (62 + -lodBlockInfo.lon.substring(1) + 1/2)
+
+        console.log(`lat ${lat}, lon ${lon}`)
+
+        this.group.position.set(lon, 0, lat);
     }
 
     updateGeometry(event) {

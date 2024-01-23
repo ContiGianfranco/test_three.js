@@ -22,6 +22,8 @@ async function init() {
 
     window.appData = {
         clippingPlanes: [],
+        lat: 54,
+        lon: 64,
     };
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 10000);
@@ -169,7 +171,6 @@ async function init() {
     }
 
     terrain = new BathCell(lodBlock);
-    terrain.setPosition(111, 0, 0)
     scene.add( terrain.group );
 
     window.addEventListener('resize', onWindowResize);
