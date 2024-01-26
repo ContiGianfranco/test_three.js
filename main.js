@@ -2,11 +2,11 @@ import * as THREE from 'three';
 import {Vector3} from 'three';
 import {getBlock} from "./js/libs/CDBQuery/CDBQuery";
 import GeoCell from "./js/Models/GeoCell";
-import RenderArea from "./js/libs/RenderArea/RenderArea";
 import BathCell from "./js/Models/BathCell";
 import GUI from "lil-gui";
 import {MapControls} from "three/addons/controls/MapControls";
 import Stats from "three/addons/libs/stats.module";
+import MyMaterials from "./js/libs/Materials";
 
 Math.radianes = function(grados) {
     return grados * Math.PI / 180;
@@ -16,7 +16,6 @@ let camera, controls, scene, renderer, stats;
 let clipping_angle = 0;
 let planeHelpers, globalPlane, planeStencil;
 const clock = new THREE.Clock();
-const renderArea = new RenderArea();
 
 async function init() {
 
@@ -37,6 +36,8 @@ async function init() {
     renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
+
+    window.appData.materials = new MyMaterials();
 
     stats = new Stats();
     document.body.appendChild( stats.dom );
@@ -176,13 +177,6 @@ async function init() {
     window.addEventListener('resize', onWindowResize);
 }
 
-async function generateTerrain(lodBlockInfo) {
-
-    const geoCellInfo = await getBlock(lodBlockInfo)
-
-    return new GeoCell(geoCellInfo, lodBlockInfo.lodNum);
-}
-
 function animate() {
     requestAnimationFrame( animate );
 
@@ -198,7 +192,6 @@ function animate() {
 
 function render() {
     controls.update( clock.getDelta() );
-    renderArea.update(camera.position.x, camera.position.z)
 
     stats.begin();
     renderer.render( scene, camera );

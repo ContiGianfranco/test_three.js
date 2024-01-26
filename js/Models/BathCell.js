@@ -4,6 +4,29 @@ import {Object3d} from "./Object3d";
 import MyWorker from '../QueryWorker?worker';
 import {ratioLongitude} from "../libs/LatitudRatio";
 
+const cells = [];
+const borders = []
+
+console.log("ping")
+
+for (let i = 0; i < 10; i++) {
+    const cell_size = 111;
+    const width = 1024 / Math.pow(2, i);
+
+    const cell = new THREE.PlaneGeometry(
+        cell_size, cell_size,
+        width - 1, width - 1);
+    cell.rotateX(-Math.PI / 2);
+    cells.push(cell);
+
+    const border = new THREE.PlaneGeometry(
+        cell_size,
+        0,
+        width - 1,
+        1);
+    borders.push(border);
+}
+
 const minHeight = -50
 
 function generateTexture(data, width) {
@@ -18,15 +41,14 @@ function generateTexture(data, width) {
 
 export default class BathCell extends Object3d{
     constructor(lodBlockInfo) {
-        const lod = lodBlockInfo.lodNum;
-        const width = 1024;
-
         super();
 
         const workerCallback = this.updateGeometry.bind(this);
-
+        const lod = lodBlockInfo.lodNum;
         this.group = new THREE.Group();
+        const Materials = window.appData.materials;
 
+        // Utilizado para LOD de mas de 0. Por ahora en des uso.
         let size_factor = 1;
         if (lod > 0){
             size_factor = Math.pow(2, lod);
@@ -34,47 +56,29 @@ export default class BathCell extends Object3d{
 
         let ratio = 1;
         try {
-            let lat = lodBlockInfo.lat.substring(1)
-
+            let lat = lodBlockInfo.lat.substring(1);
             if (lodBlockInfo.lat[0] === 'S') {
                 lat = -lat;
             }
-
             ratio = ratioLongitude(lat);
-            console.log(ratio)
-            console.log(lat)
-
         } catch (error) {
             console.error(error);
         }
 
         // Create the geometry
-        const terrainGeometry = new THREE.PlaneGeometry(
-            111/size_factor * ratio,
-            111/size_factor,
-            width - 1,
-            width - 1);
-        terrainGeometry.rotateX(-Math.PI / 2);
+        const terrainGeometry = cells[0].clone();
+        terrainGeometry.scale(ratio,1,1);
 
         const waterGeometry = terrainGeometry.clone();
 
-        const floorGeometry = new THREE.PlaneGeometry(
-            111/size_factor * ratio,
-            111/size_factor,
-            1,
-            1);
+        const floorGeometry = cells[0].clone();
+        floorGeometry.translate(0,minHeight,0);
+        floorGeometry.scale(ratio,1,1);
 
-        floorGeometry.rotateX(-Math.PI / 2);
-        floorGeometry.translate(0, minHeight, 0 )
-
-        const northPlaneGeometry = new THREE.PlaneGeometry(
-            111/size_factor,
-            0,
-            width - 1,
-            1);
-        const southPlaneGeometry = northPlaneGeometry.clone();
-        const westPlaneGeometry = northPlaneGeometry.clone();
-        const eastPlaneGeometry = northPlaneGeometry.clone();
+        const northPlaneGeometry = borders[0].clone();
+        const southPlaneGeometry = borders[0].clone();
+        const westPlaneGeometry = borders[0].clone();
+        const eastPlaneGeometry = borders[0].clone();
 
         northPlaneGeometry.scale(ratio, 1, 1)
         southPlaneGeometry.scale(ratio, 1, 1)
@@ -87,89 +91,29 @@ export default class BathCell extends Object3d{
         eastPlaneGeometry.rotateY(-Math.PI/2);
         eastPlaneGeometry.translate((111/size_factor * ratio) / 2 , minHeight, 0);
 
-        const floorMaterial = new THREE.MeshBasicMaterial(
-            {
-                color: 0xffffff,
-                stencilWrite: true,
-                stencilFunc: THREE.AlwaysStencilFunc,
-                colorWrite: false,
-                clippingPlanes: window.appData.clippingPlanes,
-                side: THREE.FrontSide,
-                stencilFail: THREE.IncrementWrapStencilOp,
-                stencilZFail: THREE.IncrementWrapStencilOp,
-                stencilZPass: THREE.IncrementWrapStencilOp,
-            });
+        const texture = generateTexture(new Uint8Array( 4 * 1024*1024), 1024);
 
-        const texture = generateTexture(new Uint8Array( 4 * width*width), width);
-        let wireframe = false;
-
-        const waterMaterial = new THREE.MeshPhongMaterial({
-            color: 0xa0a0ff,
-            shininess: 0.3,
-            map: texture,
-            clippingPlanes: window.appData.clippingPlanes,
-            transparent: true,
-            wireframe: wireframe,
-        });
-
-        wireframe = false;
-
-        const terrainMaterial = new THREE.MeshPhongMaterial( {
-            color: 0xb57272,
-            side: THREE.BackSide,
-            stencilWrite: true,
-            stencilFunc: THREE.AlwaysStencilFunc,
-            clippingPlanes: window.appData.clippingPlanes,
-            stencilFail: THREE.DecrementWrapStencilOp,
-            stencilZFail: THREE.DecrementWrapStencilOp,
-            stencilZPass: THREE.DecrementWrapStencilOp,
-        } );
-
-        const baseMat = new THREE.MeshPhongMaterial({
-            color: 0xb57272,
-            stencilWrite: true,
-            stencilFunc: THREE.AlwaysStencilFunc,
-            side: THREE.FrontSide,
-            clippingPlanes: window.appData.clippingPlanes,
-            stencilFail: THREE.DecrementWrapStencilOp,
-            stencilZFail: THREE.DecrementWrapStencilOp,
-            stencilZPass: THREE.DecrementWrapStencilOp,
-        });
-
-        const backMaterial = new THREE.MeshBasicMaterial(
-            {
-                color: 0xffffff,
-                stencilWrite: true,
-                stencilFunc: THREE.AlwaysStencilFunc,
-                colorWrite: false,
-                clippingPlanes: window.appData.clippingPlanes,
-                side: THREE.BackSide,
-                stencilFail: THREE.IncrementWrapStencilOp,
-                stencilZFail: THREE.IncrementWrapStencilOp,
-                stencilZPass: THREE.IncrementWrapStencilOp,
-            });
-
-        const waterMesh = new THREE.Mesh(waterGeometry, waterMaterial);
+        const waterMesh = new THREE.Mesh(waterGeometry, Materials.waterMaterial);
         waterMesh.layers.set( 1 );
 
-        const terrainMesh = new THREE.Mesh(terrainGeometry, baseMat);
-        const terrainBackMesh = new THREE.Mesh(terrainGeometry,backMaterial);
+        const terrainMesh = new THREE.Mesh(terrainGeometry, Materials.baseMat);
+        const terrainBackMesh = new THREE.Mesh(terrainGeometry,Materials.backMaterial);
         terrainMesh.layers.set( 0 );
         terrainMesh.renderOrder = 1;
 
-        const northPlaneIn = new THREE.Mesh( northPlaneGeometry, floorMaterial );
-        const northPlaneOut = new THREE.Mesh( northPlaneGeometry, terrainMaterial );
+        const northPlaneIn = new THREE.Mesh( northPlaneGeometry, Materials.floorMaterial );
+        const northPlaneOut = new THREE.Mesh( northPlaneGeometry, Materials.terrainMaterial );
 
-        const southPlaneIn = new THREE.Mesh( southPlaneGeometry, floorMaterial );
-        const southPlaneOut = new THREE.Mesh( southPlaneGeometry, terrainMaterial );
+        const southPlaneIn = new THREE.Mesh( southPlaneGeometry, Materials.floorMaterial );
+        const southPlaneOut = new THREE.Mesh( southPlaneGeometry, Materials.terrainMaterial );
 
-        const westPlaneIn = new THREE.Mesh( westPlaneGeometry, floorMaterial );
-        const westPlaneOut = new THREE.Mesh( westPlaneGeometry, terrainMaterial );
+        const westPlaneIn = new THREE.Mesh( westPlaneGeometry, Materials.floorMaterial );
+        const westPlaneOut = new THREE.Mesh( westPlaneGeometry, Materials.terrainMaterial );
 
-        const eastPlaneIn = new THREE.Mesh( eastPlaneGeometry, floorMaterial );
-        const eastPlaneOut = new THREE.Mesh( eastPlaneGeometry, terrainMaterial );
+        const eastPlaneIn = new THREE.Mesh( eastPlaneGeometry, Materials.floorMaterial );
+        const eastPlaneOut = new THREE.Mesh( eastPlaneGeometry, Materials.terrainMaterial );
 
-        const floor = new THREE.Mesh( floorGeometry, floorMaterial );
+        const floor = new THREE.Mesh( floorGeometry, Materials.floorMaterial );
 
         this.group.add(terrainMesh);
         this.group.add(waterMesh);
@@ -188,8 +132,8 @@ export default class BathCell extends Object3d{
         this.webwoker.postMessage({'lodBlockInfo': lodBlockInfo});
         this.webwoker.onmessage = workerCallback;
 
-        let lat = 111 * (54 + -lodBlockInfo.lat.substring(1) + ratio/2)
-        let lon = 111 * (62 + -lodBlockInfo.lon.substring(1) + 1/2)
+        let lat = 111 * (window.appData.lat + -lodBlockInfo.lat.substring(1) + ratio/2)
+        let lon = 111 * (window.appData.lon + -lodBlockInfo.lon.substring(1) + 1/2)
 
         console.log(`lat ${lat}, lon ${lon}`)
 
