@@ -1,7 +1,5 @@
 import * as THREE from 'three';
 import {Vector3} from 'three';
-import {getBlock} from "./js/libs/CDBQuery/CDBQuery";
-import GeoCell from "./js/Models/GeoCell";
 import BathCell from "./js/Models/BathCell";
 import GUI from "lil-gui";
 import {MapControls} from "three/addons/controls/MapControls";
@@ -37,8 +35,6 @@ async function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    window.appData.materials = new MyMaterials();
-
     stats = new Stats();
     document.body.appendChild( stats.dom );
 
@@ -50,6 +46,8 @@ async function init() {
     planeHelpers.depthWrite = false;
     planeHelpers.renderOrder = 9;
     scene.add( planeHelpers );
+
+    window.appData.materials = new MyMaterials();
 
     // set gui
     const gui = new GUI();
@@ -120,18 +118,14 @@ async function init() {
 
     // Set controls
     controls = new MapControls( camera, renderer.domElement );
-
     controls.enableDamping = true; // an animation loop is required when either damping or autorotation are enabled
     controls.dampingFactor = 0.05;
-
     controls.screenSpacePanning = false;
-
     controls.minDistance = -100;
     controls.maxDistance = 1000;
-
     controls.maxPolarAngle = Math.PI / 2;
 
-    const planeStencilGeom = new THREE.PlaneGeometry(111, 111, 1, 1);
+    const planeStencilGeom = new THREE.PlaneGeometry(1000, 111, 1, 1);
     const planeStencilMat = new THREE.MeshBasicMaterial( {
         color: 0xb57272,
         metalness: 0.1,

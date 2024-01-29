@@ -5,12 +5,12 @@ import MyWorker from '../QueryWorker?worker';
 import {ratioLongitude} from "../libs/LatitudRatio";
 
 const cells = [];
-const borders = []
+const borders = [];
+const cell_size = 111;
+const minHeight = -50;
 
-console.log("ping")
 
 for (let i = 0; i < 10; i++) {
-    const cell_size = 111;
     const width = 1024 / Math.pow(2, i);
 
     const cell = new THREE.PlaneGeometry(
@@ -26,8 +26,6 @@ for (let i = 0; i < 10; i++) {
         1);
     borders.push(border);
 }
-
-const minHeight = -50
 
 function generateTexture(data, width) {
     const texture = new THREE.DataTexture( data, width, width);
@@ -83,22 +81,19 @@ export default class BathCell extends Object3d{
         northPlaneGeometry.scale(ratio, 1, 1)
         southPlaneGeometry.scale(ratio, 1, 1)
 
-        northPlaneGeometry.translate(0 , minHeight, -(111/size_factor) / 2 );
+        northPlaneGeometry.translate(0 , minHeight, -(cell_size) / 2 );
         southPlaneGeometry.rotateY(Math.PI);
-        southPlaneGeometry.translate(0 , minHeight, (111/size_factor) / 2 );
+        southPlaneGeometry.translate(0 , minHeight, (cell_size) / 2 );
         westPlaneGeometry.rotateY(Math.PI/2);
-        westPlaneGeometry.translate(-(111/size_factor * ratio) / 2 , minHeight, 0);
+        westPlaneGeometry.translate(-(cell_size * ratio) / 2 , minHeight, 0);
         eastPlaneGeometry.rotateY(-Math.PI/2);
-        eastPlaneGeometry.translate((111/size_factor * ratio) / 2 , minHeight, 0);
-
-        const texture = generateTexture(new Uint8Array( 4 * 1024*1024), 1024);
+        eastPlaneGeometry.translate((cell_size * ratio) / 2 , minHeight, 0);
 
         const waterMesh = new THREE.Mesh(waterGeometry, Materials.waterMaterial);
         waterMesh.layers.set( 1 );
 
         const terrainMesh = new THREE.Mesh(terrainGeometry, Materials.baseMat);
         const terrainBackMesh = new THREE.Mesh(terrainGeometry,Materials.backMaterial);
-        terrainMesh.layers.set( 0 );
         terrainMesh.renderOrder = 1;
 
         const northPlaneIn = new THREE.Mesh( northPlaneGeometry, Materials.floorMaterial );
@@ -132,14 +127,15 @@ export default class BathCell extends Object3d{
         this.webwoker.postMessage({'lodBlockInfo': lodBlockInfo});
         this.webwoker.onmessage = workerCallback;
 
-        let lat = 111 * (window.appData.lat + -lodBlockInfo.lat.substring(1) + ratio/2)
-        let lon = 111 * (window.appData.lon + -lodBlockInfo.lon.substring(1) + 1/2)
+        let lat = cell_size * (window.appData.lat + -lodBlockInfo.lat.substring(1) + ratio/2)
+        let lon = cell_size * (window.appData.lon + -lodBlockInfo.lon.substring(1) + 1/2)
 
         console.log(`lat ${lat}, lon ${lon}`)
 
         this.group.position.set(lon, 0, lat);
     }
 
+    // TODO: pasar esta logica al worker
     updateGeometry(event) {
 
         let vertexIndex = 0, point = 0;
