@@ -127,12 +127,13 @@ export default class BathCell extends Object3d{
         this.webwoker.postMessage({'lodBlockInfo': lodBlockInfo});
         this.webwoker.onmessage = workerCallback;
 
-        let lat = cell_size * (window.appData.lat + -lodBlockInfo.lat.substring(1) + ratio/2)
-        let lon = cell_size * (window.appData.lon + -lodBlockInfo.lon.substring(1) + 1/2)
+        let lat = cell_size * (-window.appData.lat + -lodBlockInfo.lat.substring(1) + 1/2)
+        let lon = cell_size * (-window.appData.lon + -lodBlockInfo.lon.substring(1) + ratio/2)
 
-        console.log(`lat ${lat}, lon ${lon}`)
+        console.log(`Cell location: lat ${lat}, lon ${lon}`)
 
-        this.group.position.set(lon, 0, lat);
+        this.group.rotateY(-Math.PI/2)
+        this.group.position.set(lat, 0, lon);
     }
 
     // TODO: pasar esta logica al worker

@@ -10,7 +10,48 @@ Math.radianes = function(grados) {
     return grados * Math.PI / 180;
 };
 
+function calculate_pendiente(point_a, point_b) {
+    return ((point_a.y - point_b.y) / (point_a.x - point_b.x));
+}
+
+function calculate_angulo(point_a, point_b) {
+    return Math.atan2(point_a.y - point_b.y, point_a.x - point_b.x);
+}
+
+function calcular_valor(m, b) {
+    const x = b/(-(1/m)-m);
+    const y = -x/m;
+
+    return Math.sqrt(Math.pow(x,2) + Math.pow(y,2))
+}
+
+function calculate_b(point, m) {
+    const y = -window.appData.lat + point.y;
+    const x = -window.appData.lon + point.x;
+
+    console.log(`m: ${m} , y:${y} , x:${x}` );
+    return 111 * (y - m * x);
+}
+
+function update_clipping_plane () {
+    // TODO: caso m = 0 y m = inf
+    const m = calculate_pendiente(clipping_point_a, clipping_point_b);
+    const b = calculate_b(clipping_point_a, m);
+
+    const omega = calculate_angulo(clipping_point_a, clipping_point_b);
+
+    console.log(`m: ${m} , b:${b}`);
+    console.log(window.appData.clippingPlanes[0]);
+    const val = calcular_valor(m, b);
+    console.log(`omega: ${omega} , b:${val}`);
+
+    window.appData.clippingPlanes[0].constant = calcular_valor(m, b);
+    window.appData.clippingPlanes[0].normal = new Vector3(Math.cos(omega), 0, -Math.sin(omega));
+}
+
 let camera, controls, scene, renderer, stats;
+let clipping_point_a = {x: -62, y:-53}
+let clipping_point_b = {x: -58, y:-54}
 let clipping_angle = 0;
 let planeHelpers, globalPlane, planeStencil;
 const clock = new THREE.Clock();
@@ -19,14 +60,14 @@ async function init() {
 
     window.appData = {
         clippingPlanes: [],
-        lat: 54,
-        lon: 64,
+        lat: -54,
+        lon: -62,
     };
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 10000);
     camera.layers.enable( 0 ); // enabled by default
     camera.layers.enable( 1 );
-    camera.position.set(353.5, 353.5, 353.5);
+    camera.position.set(0, 353.5, 0);
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xe0e0ff);
@@ -65,6 +106,35 @@ async function init() {
 
             },
 
+            get 'Point A x' (){
+                return clipping_point_a.x;
+            },
+            set 'Point A x' (x){
+                clipping_point_a.x = x;
+                update_clipping_plane();
+            },
+            get 'Point A y' (){
+                return clipping_point_a.y;
+            },
+            set 'Point A y' (y){
+                clipping_point_a.y = y;
+                update_clipping_plane();
+            },
+            get 'Point B x' (){
+                return clipping_point_b.x;
+            },
+            set 'Point B x' (x){
+                clipping_point_b.x = x;
+                update_clipping_plane();
+            },
+            get 'Point B y' (){
+                return clipping_point_b.y;
+            },
+            set 'Point B y' (y){
+                clipping_point_b.y = y;
+                update_clipping_plane();
+            },
+
             get 'Plane'() {
                 return globalPlane.constant;
             },
@@ -94,9 +164,15 @@ async function init() {
         };
 
     folderClipping.add( propsClipping, 'Enabled' );
+    folderClipping.add( propsClipping, 'Point A x' );
+    folderClipping.add( propsClipping, 'Point A y' );
+    folderClipping.add( propsClipping, 'Point B x' );
+    folderClipping.add( propsClipping, 'Point B y' );
     folderClipping.add( propsClipping, 'Plane', - 1024/2, 1024/2 );
     folderClipping.add( propsClipping, 'Angle', -180, 180 );
     folderClipping.add( propsClipping, 'Display Helper' );
+
+    update_clipping_plane();
 
     const layers = {
         'toggle water': function () {
@@ -141,6 +217,9 @@ async function init() {
     planeStencil = new THREE.Mesh( planeStencilGeom, planeStencilMat );
     planeStencil.renderOrder = 2;
     scene.add(planeStencil)
+
+    const axesHelper = new THREE.AxesHelper( 111 );
+    scene.add( axesHelper );
 
     // set terrain
     let lodBlock = {
