@@ -5,6 +5,7 @@ import GUI from "lil-gui";
 import {MapControls} from "three/addons/controls/MapControls";
 import Stats from "three/addons/libs/stats.module";
 import MyMaterials from "./js/libs/Materials";
+import LODCell from "./js/Models/LODCell";
 
 Math.radianes = function(grados) {
     return grados * Math.PI / 180;
@@ -225,27 +226,53 @@ async function init() {
     let lodBlock = {
         lat: "S54",
         lon: "W062",
-        lod: "L00",
-        lodNum: 0,
+        lod: "LC01",
+        lodNum: -1,
         uref: "U0",
         rref: "R0"
     }
 
-    let terrain = new BathCell(lodBlock);
-    scene.add( terrain.group );
+    let terrain = new LODCell(lodBlock);
+    scene.add( terrain.lod );
 
     // set terrain
     lodBlock = {
         lat: "S54",
         lon: "W060",
-        lod: "L00",
-        lodNum: 0,
+        lod: "LC01",
+        lodNum: -1,
         uref: "U0",
         rref: "R0"
     }
 
-    terrain = new BathCell(lodBlock);
-    scene.add( terrain.group );
+    terrain = new LODCell(lodBlock);
+    scene.add( terrain.lod );
+
+    // set terrain
+    lodBlock = {
+        lat: "S55",
+        lon: "W062",
+        lod: "LC01",
+        lodNum: -1,
+        uref: "U0",
+        rref: "R0"
+    }
+
+    terrain = new LODCell(lodBlock);
+    scene.add( terrain.lod );
+
+    // set terrain
+    lodBlock = {
+        lat: "S55",
+        lon: "W060",
+        lod: "LC01",
+        lodNum: -1,
+        uref: "U0",
+        rref: "R0"
+    }
+
+    terrain = new LODCell(lodBlock);
+    scene.add( terrain.lod );
 
     window.addEventListener('resize', onWindowResize);
 }

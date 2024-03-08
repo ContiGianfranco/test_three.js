@@ -10,7 +10,7 @@ function generateUrls(lodBlockInfo) {
 
     const elevationPath = `${TILES_URL}/${lodBlockInfo.lat}/${lodBlockInfo.lon}/${ELEVATION_LAYER}`;
     const loadPath = (lodBlockInfo.lod.includes("LC") ? '/LC' : `/${lodBlockInfo.lod}`);
-    const urefPath = `/${lodBlockInfo.uref}`;
+    const urefPath = (lodBlockInfo.lod.includes("LC") ? '' : `/${lodBlockInfo.uref}`);
 
     const elevationLayerFileName = `/${lodBlockInfo.lat}${lodBlockInfo.lon}_${ELEVATION_LAYER_DST}_${lodBlockInfo.lod}_${lodBlockInfo.uref}_${lodBlockInfo.rref}.tif`;
     const bathymetricLayerFileName = `/${lodBlockInfo.lat}${lodBlockInfo.lon}_${BATHYMETRIC_LAYER_DST}_${lodBlockInfo.lod}_${lodBlockInfo.uref}_${lodBlockInfo.rref}.tif`;

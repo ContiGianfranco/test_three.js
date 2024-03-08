@@ -48,8 +48,11 @@ export default class BathCell extends Object3d{
 
         // Utilizado para LOD de mas de 0. Por ahora en des uso.
         let size_factor = 1;
+        let cell_index = 0;
         if (lod > 0){
             size_factor = Math.pow(2, lod);
+        } else if (lod < 0){
+            cell_index = -lod;
         }
 
         let ratio = 1;
@@ -64,7 +67,7 @@ export default class BathCell extends Object3d{
         }
 
         // Create the geometry
-        const terrainGeometry = cells[0].clone();
+        const terrainGeometry = cells[cell_index].clone();
         terrainGeometry.scale(ratio,1,1);
 
         const waterGeometry = terrainGeometry.clone();
@@ -73,10 +76,10 @@ export default class BathCell extends Object3d{
         floorGeometry.translate(0,minHeight,0);
         floorGeometry.scale(ratio,1,1);
 
-        const northPlaneGeometry = borders[0].clone();
-        const southPlaneGeometry = borders[0].clone();
-        const westPlaneGeometry = borders[0].clone();
-        const eastPlaneGeometry = borders[0].clone();
+        const northPlaneGeometry = borders[cell_index].clone();
+        const southPlaneGeometry = borders[cell_index].clone();
+        const westPlaneGeometry = borders[cell_index].clone();
+        const eastPlaneGeometry = borders[cell_index].clone();
 
         northPlaneGeometry.scale(ratio, 1, 1)
         southPlaneGeometry.scale(ratio, 1, 1)
@@ -216,7 +219,7 @@ export default class BathCell extends Object3d{
         const westGeometry = this.group.children[6].geometry;
         let westVertices = westGeometry.attributes.position.array;
 
-        point = size-1024;
+        point = size-width;
         vertexIndex = 0;
 
         while (point >= 0) {
@@ -228,14 +231,14 @@ export default class BathCell extends Object3d{
             }
 
             vertexIndex += 3
-            point-=1024;
+            point-=width;
         }
 
         const eastGeometry = this.group.children[8].geometry;
         let eastVertices = eastGeometry.attributes.position.array;
 
         vertexIndex = 0;
-        point = 1023;
+        point = width - 1;
 
         while (point < size) {
 
@@ -246,7 +249,7 @@ export default class BathCell extends Object3d{
             }
 
             vertexIndex += 3
-            point+=1024;
+            point+=width;
         }
 
         this.group.children[1].material.map = generateTexture(data, width);
