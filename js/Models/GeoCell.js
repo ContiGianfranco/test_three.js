@@ -1,6 +1,5 @@
 import * as THREE from "three";
 
-import {Object3d} from "./Object3d";
 
 function isBorder(vertexIndex, width){
     return (vertexIndex < (width + 1) * 3) ||
@@ -9,16 +8,14 @@ function isBorder(vertexIndex, width){
         (vertexIndex > (width + 1) * (width + 2) * 3 - 3);
 }
 
-export default class GeoCell extends Object3d{
+export default class GeoCell {
     constructor(geoCellInfo, lod) {
         let vertexIndex = 0;
         let point = 0;
 
         const width = geoCellInfo['width'];
         const raster = geoCellInfo['raster'];
-        const texture = geoCellInfo['texture']
-
-        super();
+        const texture = geoCellInfo['texture'];
 
         let size_factor = 1;
         if (lod > 0){

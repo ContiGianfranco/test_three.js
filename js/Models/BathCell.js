@@ -1,15 +1,15 @@
 import * as THREE from "three";
 
-import {Object3d} from "./Object3d";
 import MyWorker from '../QueryWorker?worker';
 import {ratioLongitude} from "../libs/LatitudRatio";
 
 const cells = [];
 const borders = [];
+
 const cell_size = 111;
 const minHeight = -50;
 
-
+// Se genera geometria standar para las celdas
 for (let i = 0; i < 10; i++) {
     const width = 1024 / Math.pow(2, i);
 
@@ -37,60 +37,68 @@ function generateTexture(data, width) {
     return texture;
 }
 
-export default class BathCell extends Object3d{
+function getCellCoordinates(lodBlockInfo) {
+
+    const lodLat = lodBlockInfo.lat.substring(1);
+    const lodLon = lodBlockInfo.lon.substring(1);
+
+    const cell_lat = (lodBlockInfo.lat[0] === 'S') ? -lodLat : +lodLat;
+    const cell_lon = (lodBlockInfo.lon[0] === 'W') ? -lodLon : +lodLon;
+
+    return [cell_lat, cell_lon];
+}
+
+export default class BathCell {
     constructor(lodBlockInfo) {
-        super();
+        this.group = new THREE.Group();
 
         const workerCallback = this.updateGeometry.bind(this);
         const lod = lodBlockInfo.lodNum;
-        this.group = new THREE.Group();
         const Materials = window.appData.materials;
+        const [cell_lat, cell_lon] = getCellCoordinates(lodBlockInfo);
+
+        let cell_index = 0;
+        let lon_ratio = 1;
 
         // Utilizado para LOD de mas de 0. Por ahora en des uso.
-        let size_factor = 1;
-        let cell_index = 0;
-        if (lod > 0){
-            size_factor = Math.pow(2, lod);
-        } else if (lod < 0){
+        if (lod < 0){
             cell_index = -lod;
         }
 
-        let ratio = 1;
         try {
-            let lat = lodBlockInfo.lat.substring(1);
-            if (lodBlockInfo.lat[0] === 'S') {
-                lat = -lat;
-            }
-            ratio = ratioLongitude(lat);
+            lon_ratio = ratioLongitude(cell_lat);
         } catch (error) {
             console.error(error);
         }
 
+        const lat = cell_size * (-window.appData.lat + cell_lat + 1/2);
+        const lon = cell_size * (-window.appData.lon + cell_lon + lon_ratio/2);
+
         // Create the geometry
         const terrainGeometry = cells[cell_index].clone();
-        terrainGeometry.scale(ratio,1,1);
+        terrainGeometry.scale(lon_ratio,1,1);
 
         const waterGeometry = terrainGeometry.clone();
 
         const floorGeometry = cells[0].clone();
         floorGeometry.translate(0,minHeight,0);
-        floorGeometry.scale(ratio,1,1);
+        floorGeometry.scale(lon_ratio,1,1);
 
         const northPlaneGeometry = borders[cell_index].clone();
         const southPlaneGeometry = borders[cell_index].clone();
         const westPlaneGeometry = borders[cell_index].clone();
         const eastPlaneGeometry = borders[cell_index].clone();
 
-        northPlaneGeometry.scale(ratio, 1, 1)
-        southPlaneGeometry.scale(ratio, 1, 1)
+        northPlaneGeometry.scale(lon_ratio, 1, 1)
+        southPlaneGeometry.scale(lon_ratio, 1, 1)
 
         northPlaneGeometry.translate(0 , minHeight, -(cell_size) / 2 );
         southPlaneGeometry.rotateY(Math.PI);
         southPlaneGeometry.translate(0 , minHeight, (cell_size) / 2 );
         westPlaneGeometry.rotateY(Math.PI/2);
-        westPlaneGeometry.translate(-(cell_size * ratio) / 2 , minHeight, 0);
+        westPlaneGeometry.translate(-(cell_size * lon_ratio) / 2 , minHeight, 0);
         eastPlaneGeometry.rotateY(-Math.PI/2);
-        eastPlaneGeometry.translate((cell_size * ratio) / 2 , minHeight, 0);
+        eastPlaneGeometry.translate((cell_size * lon_ratio) / 2 , minHeight, 0);
 
         const waterMesh = new THREE.Mesh(waterGeometry, Materials.waterMaterial);
         waterMesh.layers.set( 1 );
@@ -130,9 +138,6 @@ export default class BathCell extends Object3d{
         this.webwoker.postMessage({'lodBlockInfo': lodBlockInfo});
         this.webwoker.onmessage = workerCallback;
 
-        let lat = cell_size * (-window.appData.lat + -lodBlockInfo.lat.substring(1) + 1/2)
-        let lon = cell_size * (-window.appData.lon + -lodBlockInfo.lon.substring(1) + ratio/2)
-
         console.log(`Cell location: lat ${lat}, lon ${lon}`)
 
         this.group.rotateY(-Math.PI/2)
@@ -154,7 +159,7 @@ export default class BathCell extends Object3d{
         let terrainVertices = terrainGeometry.attributes.position.array;
         let waterVertices = waterGeometry.attributes.position.array;
 
-        const size = width*width
+        const size = width*width;
         const data = new Uint8Array( 4 * size);
 
         const terrain_scaling = 0.01
