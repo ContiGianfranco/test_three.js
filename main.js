@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import {Vector3} from 'three';
-import BathCell from "./js/Models/BathCell";
 import GUI from "lil-gui";
 import {MapControls} from "three/addons/controls/MapControls";
 import Stats from "three/addons/libs/stats.module";
@@ -20,6 +19,12 @@ function calculate_angulo(point_a, point_b) {
 }
 
 function calcular_valor(m, b) {
+    if (m === 0) {
+        return b;
+    } else if (Math.abs(m) === Infinity){
+        return 111 * (-window.appData.lon + clipping_point_a.x);
+    }
+
     const x = b/(-(1/m)-m);
     const y = -x/m;
 
@@ -35,7 +40,6 @@ function calculate_b(point, m) {
 }
 
 function update_clipping_plane () {
-    // TODO: caso m = 0 y m = inf
     const m = calculate_pendiente(clipping_point_a, clipping_point_b);
     const b = calculate_b(clipping_point_a, m);
 
@@ -44,7 +48,7 @@ function update_clipping_plane () {
     console.log(`m: ${m} , b:${b}`);
     console.log(window.appData.clippingPlanes[0]);
     const val = calcular_valor(m, b);
-    console.log(`omega: ${omega} , b:${val}`);
+    console.log(`omega: ${omega} , constant:${val}`);
 
     window.appData.clippingPlanes[0].constant = calcular_valor(m, b);
     window.appData.clippingPlanes[0].normal = new Vector3(Math.cos(omega), 0, -Math.sin(omega));
