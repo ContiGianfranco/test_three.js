@@ -62,7 +62,7 @@ async function init() {
     window.appData = {
         clippingPlanes: [],
         lat: -54,
-        lon: -62,
+        lon: -60,
     };
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 10, 10000);

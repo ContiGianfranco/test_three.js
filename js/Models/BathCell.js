@@ -8,8 +8,9 @@ const borders = [];
 
 const cell_size = 111;
 const minHeight = -50;
+const terrain_scaling = 0.01;
 
-// Se genera geometria standar para las celdas
+// Standard geometry for geoCells
 for (let i = 0; i < 10; i++) {
     const width = 1024 / Math.pow(2, i);
 
@@ -51,6 +52,7 @@ function getCellCoordinates(lodBlockInfo) {
 export default class BathCell {
     constructor(lodBlockInfo) {
         this.group = new THREE.Group();
+        this.width = 1024;
 
         const workerCallback = this.updateGeometry.bind(this);
         const lod = lodBlockInfo.lodNum;
@@ -60,9 +62,9 @@ export default class BathCell {
         let cell_index = 0;
         let lon_ratio = 1;
 
-        // Utilizado para LOD de mas de 0. Por ahora en des uso.
         if (lod < 0){
             cell_index = -lod;
+            this.width = Math.pow(2, 10-cell_index);
         }
 
         try {
@@ -144,34 +146,44 @@ export default class BathCell {
         this.group.position.set(lat, 0, lon);
     }
 
-    // TODO: pasar esta logica al worker
     updateGeometry(event) {
 
-        let vertexIndex = 0, point = 0;
+        if (this.width !== event.data['width']) {
+            throw new Error(`Width received(${event.data['width']}) doesn't mach cell width(${this.width})`);
+        }
 
-        const width = event.data['width'];
         const raster = event.data['raster'];
         const rasterBath = event.data['rasterBath'];
+
+        this.updateTopGeometry(raster, rasterBath);
+        this.updateNorthGeometry(raster, rasterBath);
+        this.updateSouthGeometry(raster, rasterBath);
+        this.updateWestGeometry(raster, rasterBath);
+        this.updateEastGeometry(raster, rasterBath);
+
+        this.webwoker = undefined;
+    }
+
+    updateTopGeometry(raster, rasterBath){
+        let vertexIndex = 0, point = 0, stride = 0;
+
+        const size = this.width * this.width;
+        const data = new Uint8Array( 4 * size);
 
         const terrainGeometry = this.group.children[0].geometry;
         const waterGeometry = this.group.children[1].geometry;
 
-        let terrainVertices = terrainGeometry.attributes.position.array;
-        let waterVertices = waterGeometry.attributes.position.array;
-
-        const size = width*width;
-        const data = new Uint8Array( 4 * size);
-
-        const terrain_scaling = 0.01
+        const terrainVertices = terrainGeometry.attributes.position.array;
+        const waterVertices = waterGeometry.attributes.position.array;
 
         while (point < size) {
-            vertexIndex = point*3
-            const stride = point * 4;
+            stride = point * 4;
 
             data[ stride ] = 55;
-            data[ stride + 1 ] = 55;
-            data[ stride + 2 ] = 255;
+            data[ stride + 1] = 55;
+            data[ stride + 2] = 255;
 
+            vertexIndex = point*3;
             waterVertices[vertexIndex + 1] = raster[point] * terrain_scaling;
 
             if (rasterBath[point] > 0) {
@@ -185,13 +197,23 @@ export default class BathCell {
             point++;
         }
 
+        this.group.children[1].material.map = generateTexture(data, this.width);
+        this.group.children[1].material.needsUpdate = true;
+
+        terrainGeometry.computeVertexNormals();
+        waterGeometry.computeVertexNormals();
+
+        terrainGeometry.attributes.position.needsUpdate = true;
+        waterGeometry.attributes.position.needsUpdate = true;
+    }
+
+    updateNorthGeometry(raster, rasterBath) {
+        let vertexIndex = 0, point = 0;
+
         const northGeometry = this.group.children[2].geometry;
         let northVertices = northGeometry.attributes.position.array;
 
-        vertexIndex = 0;
-        point = 0;
-
-        while (point < width) {
+        while (point < this.width) {
             vertexIndex = point*3
 
             if (rasterBath[point] > 0) {
@@ -203,13 +225,18 @@ export default class BathCell {
             point++;
         }
 
+        northGeometry.attributes.position.needsUpdate = true;
+    }
+
+    updateSouthGeometry(raster, rasterBath) {
+        const size = this.width * this.width;
+        let vertexIndex = 0, point = size-1;
+
         const southGeometry = this.group.children[4].geometry;
         let southVertices = southGeometry.attributes.position.array;
 
-        point = size-1;
-        vertexIndex = 0;
 
-        while (point >= size-width) {
+        while (point >= size-this.width) {
 
             if (rasterBath[point] > 0) {
                 southVertices[vertexIndex + 1] = (raster[point] - rasterBath[point]) * terrain_scaling;
@@ -221,11 +248,15 @@ export default class BathCell {
             point--;
         }
 
+        southGeometry.attributes.position.needsUpdate = true;
+    }
+
+    updateWestGeometry(raster, rasterBath) {
+        const size = this.width * this.width;
+        let vertexIndex = 0, point = size - this.width;
+
         const westGeometry = this.group.children[6].geometry;
         let westVertices = westGeometry.attributes.position.array;
-
-        point = size-width;
-        vertexIndex = 0;
 
         while (point >= 0) {
 
@@ -236,14 +267,18 @@ export default class BathCell {
             }
 
             vertexIndex += 3
-            point-=width;
+            point-=this.width;
         }
+
+        westGeometry.attributes.position.needsUpdate = true;
+    }
+
+    updateEastGeometry(raster, rasterBath) {
+        const size = this.width * this.width;
+        let vertexIndex = 0, point = this.width - 1;
 
         const eastGeometry = this.group.children[8].geometry;
         let eastVertices = eastGeometry.attributes.position.array;
-
-        vertexIndex = 0;
-        point = width - 1;
 
         while (point < size) {
 
@@ -254,23 +289,9 @@ export default class BathCell {
             }
 
             vertexIndex += 3
-            point+=width;
+            point += this.width;
         }
 
-        this.group.children[1].material.map = generateTexture(data, width);
-        this.group.children[1].material.needsUpdate = true;
-
-        terrainGeometry.computeVertexNormals();
-        waterGeometry.computeVertexNormals();
-
-        terrainGeometry.attributes.position.needsUpdate = true;
-        waterGeometry.attributes.position.needsUpdate = true;
-
-        northGeometry.attributes.position.needsUpdate = true;
-        southGeometry.attributes.position.needsUpdate = true;
-        westGeometry.attributes.position.needsUpdate = true;
         eastGeometry.attributes.position.needsUpdate = true;
-
-        this.webwoker = undefined;
     }
 }
