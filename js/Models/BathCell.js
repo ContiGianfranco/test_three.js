@@ -2,11 +2,12 @@ import * as THREE from "three";
 
 import MyWorker from '../QueryWorker?worker';
 import {ratioLongitude} from "../libs/LatitudRatio";
+import {getCellCoordinates} from "../libs/CellFunctions";
+import {cell_size} from "../constants/TerreinConstants";
 
 const cells = [];
 const borders = [];
 
-const cell_size = 111;
 const minHeight = -50;
 const terrain_scaling = 0.01;
 
@@ -38,17 +39,6 @@ function generateTexture(data, width) {
     return texture;
 }
 
-function getCellCoordinates(lodBlockInfo) {
-
-    const lodLat = lodBlockInfo.lat.substring(1);
-    const lodLon = lodBlockInfo.lon.substring(1);
-
-    const cell_lat = (lodBlockInfo.lat[0] === 'S') ? -lodLat : +lodLat;
-    const cell_lon = (lodBlockInfo.lon[0] === 'W') ? -lodLon : +lodLon;
-
-    return [cell_lat, cell_lon];
-}
-
 export default class BathCell {
     constructor(lodBlockInfo) {
         this.group = new THREE.Group();
@@ -57,7 +47,7 @@ export default class BathCell {
         const workerCallback = this.updateGeometry.bind(this);
         const lod = lodBlockInfo.lodNum;
         const Materials = window.appData.materials;
-        const [cell_lat, cell_lon] = getCellCoordinates(lodBlockInfo);
+        const [cell_lat, ] = getCellCoordinates(lodBlockInfo);
 
         let cell_index = 0;
         let lon_ratio = 1;
@@ -73,8 +63,7 @@ export default class BathCell {
             console.error(error);
         }
 
-        const lat = cell_size * (-window.appData.lat + cell_lat + 1/2);
-        const lon = cell_size * (-window.appData.lon + cell_lon + lon_ratio/2);
+
 
         // Create the geometry
         const terrainGeometry = cells[cell_index].clone();
@@ -139,11 +128,6 @@ export default class BathCell {
         this.webwoker = new MyWorker();
         this.webwoker.postMessage({'lodBlockInfo': lodBlockInfo});
         this.webwoker.onmessage = workerCallback;
-
-        console.log(`Cell location: lat ${lat}, lon ${lon}`)
-
-        this.group.rotateY(-Math.PI/2)
-        this.group.position.set(lat, 0, lon);
     }
 
     updateGeometry(event) {

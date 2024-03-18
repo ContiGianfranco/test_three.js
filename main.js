@@ -107,6 +107,7 @@ async function init() {
             },
             set 'Enabled'( v ) {
 
+                camera.layers.toggle( 2 );
                 renderer.localClippingEnabled = v;
 
             },
@@ -220,6 +221,7 @@ async function init() {
         stencilZPass: THREE.ReplaceStencilOp,
     } );
     planeStencil = new THREE.Mesh( planeStencilGeom, planeStencilMat );
+    planeStencil.layers.set( 2 );
     planeStencil.renderOrder = 2;
     scene.add(planeStencil)
 
@@ -283,6 +285,7 @@ async function init() {
 
 function animate() {
     requestAnimationFrame( animate );
+    globalPlane.constant = globalPlane.constant + 1;
 
     globalPlane.coplanarPoint( planeStencil.position );
     planeStencil.lookAt(
@@ -290,6 +293,8 @@ function animate() {
         planeStencil.position.y - globalPlane.normal.y,
         planeStencil.position.z - globalPlane.normal.z,
     );
+
+    globalPlane.constant = globalPlane.constant - 1;
 
     render();
 }

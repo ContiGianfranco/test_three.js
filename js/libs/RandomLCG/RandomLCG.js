@@ -8,7 +8,7 @@ class RandomLCG {
 
         this.multiplier = 22695477;
         this.increment = 1;
-        this.module = 2^32;
+        this.module = 2147483648;
     }
 
     setSeed(seed) {
@@ -21,8 +21,12 @@ class RandomLCG {
         return this.seed / this.module;
     }
 
-    generateInRange(min, max) {
+    generateIntInRange(min, max) {
         return Math.floor(this.generate() * (max - min + 1) + min);
+    }
+
+    generateFloatInRange(min, max) {
+        return this.generate() * (max - min) + min;
     }
 }
 

@@ -6,10 +6,9 @@ export default class MyMaterials {
 
         this.floorMaterial = new THREE.MeshBasicMaterial(
             {
-                color: 0xffffff,
+                color: 0xb57272,
                 stencilWrite: true,
                 stencilFunc: THREE.AlwaysStencilFunc,
-                colorWrite: false,
                 clippingPlanes: window.appData.clippingPlanes,
                 side: THREE.FrontSide,
                 stencilFail: THREE.IncrementWrapStencilOp,
@@ -48,7 +47,7 @@ export default class MyMaterials {
 
         this.backMaterial = new THREE.MeshBasicMaterial(
             {
-                color: 0xffffff,
+                color: 0xb57272,
                 stencilWrite: true,
                 stencilFunc: THREE.AlwaysStencilFunc,
                 colorWrite: false,
