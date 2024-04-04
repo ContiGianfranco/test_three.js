@@ -13,4 +13,4 @@ function makeQuery() {
     }
 }
 
-await makeQuery()
+makeQuery()
