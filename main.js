@@ -5,6 +5,8 @@ import {MapControls} from "three/addons/controls/MapControls";
 import Stats from "three/addons/libs/stats.module";
 import MyMaterials from "./js/libs/Materials";
 import LODCell from "./js/Models/LODCell";
+import GeoCell from "./js/Models/GeoCell";
+import BathCell from "./js/Models/BathCell";
 
 Math.radianes = function(grados) {
     return grados * Math.PI / 180;
@@ -50,8 +52,10 @@ function update_clipping_plane () {
     const val = calcular_valor(m, b);
     console.log(`omega: ${omega} , constant:${val}`);
 
-    window.appData.clippingPlanes[0].constant = calcular_valor(m, b);
-    window.appData.clippingPlanes[0].normal = new Vector3(Math.cos(omega), 0, -Math.sin(omega));
+    const planeConstant = calcular_valor(m, b);
+    const planeNormal = new Vector3(Math.cos(omega), 0, -Math.sin(omega));
+
+    return [planeConstant, planeNormal];
 }
 
 let camera, controls, scene, renderer, stats;
@@ -117,28 +121,28 @@ async function init() {
             },
             set 'Point A x' (x){
                 clipping_point_a.x = x;
-                update_clipping_plane();
+                [globalPlane.constant, globalPlane.normal] = update_clipping_plane();
             },
             get 'Point A y' (){
                 return clipping_point_a.y;
             },
             set 'Point A y' (y){
                 clipping_point_a.y = y;
-                update_clipping_plane();
+                [globalPlane.constant, globalPlane.normal] = update_clipping_plane();
             },
             get 'Point B x' (){
                 return clipping_point_b.x;
             },
             set 'Point B x' (x){
                 clipping_point_b.x = x;
-                update_clipping_plane();
+                [globalPlane.constant, globalPlane.normal] = update_clipping_plane();
             },
             get 'Point B y' (){
                 return clipping_point_b.y;
             },
             set 'Point B y' (y){
                 clipping_point_b.y = y;
-                update_clipping_plane();
+                [globalPlane.constant, globalPlane.normal] = update_clipping_plane();
             },
 
             get 'Plane'() {
@@ -178,7 +182,7 @@ async function init() {
     folderClipping.add( propsClipping, 'Angle', -180, 180 );
     folderClipping.add( propsClipping, 'Display Helper' );
 
-    update_clipping_plane();
+    [globalPlane.constant, globalPlane.normal] = update_clipping_plane();
 
     const layers = {
         'toggle water': function () {
@@ -210,9 +214,6 @@ async function init() {
     const planeStencilGeom = new THREE.PlaneGeometry(1000, 111, 1, 1);
     const planeStencilMat = new THREE.MeshBasicMaterial( {
         color: 0xb57272,
-        metalness: 0.1,
-        roughness: 0.75,
-
         stencilWrite: true,
         stencilRef: 1,
         stencilFunc: THREE.EqualStencilFunc,
@@ -228,56 +229,16 @@ async function init() {
     const axesHelper = new THREE.AxesHelper( 111 );
     scene.add( axesHelper );
 
-    // set terrain
-    let lodBlock = {
-        lat: "S54",
-        lon: "W062",
-        lod: "LC01",
-        lodNum: -1,
-        uref: "U0",
-        rref: "R0"
-    }
-
-    let terrain = new LODCell(lodBlock);
+    let terrain = new LODCell("S54", "W062", "L00", 3);
     scene.add( terrain.lod );
 
-    // set terrain
-    lodBlock = {
-        lat: "S54",
-        lon: "W060",
-        lod: "LC01",
-        lodNum: -1,
-        uref: "U0",
-        rref: "R0"
-    }
-
-    terrain = new LODCell(lodBlock);
+    terrain = new LODCell("S54", "W060", "L00", 3);
     scene.add( terrain.lod );
 
-    // set terrain
-    lodBlock = {
-        lat: "S55",
-        lon: "W062",
-        lod: "LC01",
-        lodNum: -1,
-        uref: "U0",
-        rref: "R0"
-    }
-
-    terrain = new LODCell(lodBlock);
+    terrain = new LODCell("S55", "W062", "L00", 3);
     scene.add( terrain.lod );
 
-    // set terrain
-    lodBlock = {
-        lat: "S55",
-        lon: "W060",
-        lod: "LC01",
-        lodNum: -1,
-        uref: "U0",
-        rref: "R0"
-    }
-
-    terrain = new LODCell(lodBlock);
+    terrain = new LODCell("S55", "W060", "L00", 3);
     scene.add( terrain.lod );
 
     window.addEventListener('resize', onWindowResize);
@@ -319,4 +280,3 @@ function onWindowResize() {
 }
 
 init().then(animate);
-
